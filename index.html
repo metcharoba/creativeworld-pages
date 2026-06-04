@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CreativeWorld — composition</title>
+  <meta name="description" content="静かな画面に、点と線が浮いている。カンディンスキーのコンポジションのような、不思議さ・芸術性・静けさを持つ小さな場所。">
+  <style>
+  
+
+  :root{
+    --ground:#fafaf7;          
+    --ground-2:#f0efe9;        
+    --ink:#161616;
+    --ink-soft:#6f6f6a;
+    --hair:#e9e7e0;            
+    --black:#111110;           
+
+    
+    --red:#b03326;
+    --blue:#26478c;
+    --ochre:#c8962a;
+    --green:#536c54;
+    --violet:#5b4985;          
+    --teal:#327079;
+    --rose:#a9787f;
+
+    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,"Roboto Mono",monospace;
+    --maxw:1120px;
+    color-scheme:light;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ground);
+    color:var(--ink);
+    font-family:var(--serif);
+    line-height:1.78;
+    overflow-x:hidden;
+    word-break:auto-phrase;
+    line-break:strict;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+
+  
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(120% 90% at 16% 6%, rgba(91,73,133,0.03), transparent 56%),
+      radial-gradient(120% 90% at 90% 94%, rgba(38,71,140,0.025), transparent 56%);
+  }
+
+  section,header,footer{
+    position:relative;
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding:17vh 8vw;
+  }
+
+  a{color:var(--blue);text-underline-offset:3px;text-decoration-thickness:1px;}
+
+  .ph{display:inline-block;}
+  .nowrap{white-space:nowrap;}
+
+  
+  .composition{position:absolute;inset:0;overflow:visible;z-index:0;pointer-events:none;}
+  section>*:not(.composition),
+  header>*:not(.composition),
+  footer>*:not(.composition){position:relative;z-index:1;}
+
+  
+  .mark{
+    font-family:var(--mono);
+    font-size:11px;letter-spacing:.42em;text-transform:lowercase;
+    color:var(--ink-soft);margin:0 0 5vh;
+    display:flex;align-items:center;gap:14px;
+  }
+  .mark::before{content:"";width:26px;height:1px;background:currentColor;opacity:.5;}
+
+  
+  .mk{position:absolute;pointer-events:none;will-change:transform;}
+  .paint{mix-blend-mode:multiply;}      
+  .circle{border-radius:50%;}
+  .ring{border-radius:50%;background:transparent;}
+
+  .circle.big{width:clamp(150px,22vw,280px);aspect-ratio:1;background:var(--violet);opacity:.17;}
+  .circle.small{width:92px;height:92px;background:var(--blue);opacity:.18;}
+  .ring{width:160px;height:160px;border:2px solid var(--ochre);}
+  .ring.small{width:72px;height:72px;border:2px solid var(--blue);}
+  .ring.tiny{width:26px;height:26px;border:2px solid var(--red);}
+  .ring.violet{border-color:var(--violet);}
+
+  .dot{width:15px;height:15px;border-radius:50%;}
+  .dot.red{background:var(--red);}.dot.blue{background:var(--blue);}
+  .dot.ochre{background:var(--ochre);}.dot.green{background:var(--green);}
+  .dot.violet{background:var(--violet);}.dot.teal{background:var(--teal);}
+  .dot.rose{background:var(--rose);}.dot.ink{background:var(--black);}
+
+  .line{height:1.5px;background:var(--black);transform-origin:left center;}
+  .line.short{width:120px;}
+  .line.hair{height:1px;opacity:.7;}
+
+  .tri{width:0;height:0;border-left:28px solid transparent;border-right:28px solid transparent;
+       border-bottom:48px solid var(--blue);opacity:.58;}
+  .tri.small{border-left-width:15px;border-right-width:15px;border-bottom-width:26px;border-bottom-color:var(--ochre);opacity:.7;}
+  .tri.green{border-bottom-color:var(--green);}
+  .tri.violet{border-bottom-color:var(--violet);}
+  .tri.red{border-bottom-color:var(--red);}
+
+  .arc{width:200px;height:200px;border:2px solid var(--red);border-radius:50%;
+       clip-path:polygon(0 50%,100% 0,100% 50%,0 100%);opacity:.5;}
+  .arc.blue{border-color:var(--blue);}
+
+  
+  .target{width:130px;height:130px;border-radius:50%;
+    background:radial-gradient(circle,
+      var(--red) 0 13%, var(--ground-2) 13% 25%,
+      var(--blue) 25% 40%, var(--ground-2) 40% 55%,
+      var(--ochre) 55% 70%, var(--ground-2) 70% 83%,
+      var(--black) 83% 100%);
+    opacity:.84;}
+  .target.halo{width:clamp(190px,26vw,340px);
+    background:radial-gradient(circle,
+      var(--black) 0 9%, var(--ground-2) 9% 17%,
+      var(--blue) 17% 30%, var(--ground-2) 30% 44%,
+      var(--violet) 44% 62%, color-mix(in oklab,var(--violet),var(--ground) 70%) 62% 100%);
+    opacity:.92;}
+
+  .quarter{width:90px;height:90px;background:var(--green);border-radius:100% 0 0 0;opacity:.36;}
+  .quarter.violet{background:var(--violet);}.quarter.teal{background:var(--teal);}
+
+  .half{width:110px;height:55px;background:var(--rose);border-radius:110px 110px 0 0;opacity:.36;}
+  .half.blue{background:var(--blue);opacity:.3;}
+
+  .checker{width:84px;height:84px;
+    background-image:
+      linear-gradient(45deg,var(--black) 25%,transparent 25% 75%,var(--black) 75%),
+      linear-gradient(45deg,var(--black) 25%,transparent 25% 75%,var(--black) 75%);
+    background-size:28px 28px;background-position:0 0,14px 14px;opacity:.1;}
+
+  .bar{width:130px;height:13px;background:var(--teal);opacity:.46;}
+  .bar.violet{background:var(--violet);}.bar.ochre{background:var(--ochre);}.bar.red{background:var(--red);}
+
+  
+  .ghost{opacity:0;transition:opacity 1.1s ease;}
+
+  
+  @keyframes floatA{0%,100%{transform:translate(0,0)}50%{transform:translate(9px,-13px)}}
+  @keyframes floatB{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(-11px,9px) rotate(3deg)}}
+  .drift-a{animation:floatA 26s ease-in-out infinite;}
+  .drift-b{animation:floatB 32s ease-in-out infinite;}
+
+  
+  .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+        padding-top:14vh;padding-bottom:12vh;}
+  .hero .composition{overflow:visible;}
+
+  
+  .hero .halo      {top:6%;  left:5%;}
+  .hero .circle.big{top:14%; right:7%;}
+  .hero .target    {top:48%; right:27%;left:auto;}
+  .hero .ring      {bottom:14%;left:8%;}
+  .hero .ring.small{top:24%; left:46%;}
+  .hero .ring.violet.tiny{top:40%;right:30%;}
+  .hero .quarter   {bottom:18%;right:24%;}
+  .hero .half      {top:20%; right:30%;}
+  .hero .checker   {bottom:9%; left:34%;}
+  .hero .arc       {bottom:5%; left:40%;}
+  .hero .arc.blue  {top:12%;  left:30%;}
+  .hero .bar       {top:64%; left:18%;}
+  .hero .bar.violet{top:34%; right:14%;}
+  .hero .tri       {top:22%; left:42%;}
+  .hero .tri.small.red{bottom:24%;left:26%;}
+  .hero .tri.green {bottom:30%;right:34%;}
+  .hero .dot.red   {top:30%; left:13%;width:20px;height:20px;}
+  .hero .dot.blue  {bottom:30%;right:18%;}
+  .hero .dot.green {top:46%; right:11%;width:17px;height:17px;}
+  .hero .dot.violet{bottom:42%;left:24%;width:12px;height:12px;}
+  .hero .dot.rose  {top:12%; left:54%;}
+  .hero .dot.ochre {top:70%; right:38%;}
+  .hero .dot.ink   {top:58%; right:8%;width:10px;height:10px;}
+  
+  .hero .ghost.g1{top:18%;left:20%;}
+  .hero .ghost.g2{top:50%;left:62%;}
+  .hero .ghost.g3{bottom:18%;left:54%;}
+  .hero .ghost.g4{top:36%;right:22%;}
+
+  .overline{font-family:var(--mono);font-size:11px;letter-spacing:.4em;text-transform:lowercase;
+            color:var(--red);margin:0 0 4vh;display:flex;align-items:center;gap:12px;}
+  .overline::before{content:"";width:22px;height:1px;background:currentColor;}
+  .title{
+    font-weight:400;
+    font-size:clamp(36px,6.6vw,86px);
+    line-height:1.24;letter-spacing:.012em;
+    margin:0;max-width:17ch;
+    text-shadow:0 1px 0 var(--ground);
+  }
+  .title .soft{color:var(--ink-soft);}
+  .lede{margin:5.5vh 0 0 6vw;font-size:clamp(15px,2vw,20px);color:var(--ink-soft);max-width:30ch;text-shadow:0 1px 0 var(--ground),0 0 12px var(--ground);}
+  .enter{margin:8vh 0 0;font-size:22px;color:var(--ink-soft);
+         animation:sink 3.8s ease-in-out infinite;width:1em;}
+  @keyframes sink{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(9px);opacity:.85}}
+
+  
+  .purpose .circle.small{top:9vh;right:6vw;}
+  .purpose .tri.small{bottom:13vh;left:5vw;--r:-12deg;}
+  .purpose .dot.rose{top:24vh;left:30vw;}
+  .purpose .ring.tiny{top:30vh;right:24vw;}
+  .purpose p{margin:0;font-size:clamp(16px,2.2vw,22px);max-width:46ch;line-height:1.95;}
+
+  
+  .float-field{position:relative;min-height:66vh;}
+  .frag{position:relative;z-index:1;font-size:clamp(20px,3.6vw,40px);line-height:1.32;margin:0;max-width:17ch;color:var(--ink);}
+  .frag.a{margin:0 0 0 2vw;}
+  .frag.b{margin:13vh 0 0 38vw;color:var(--ink-soft);font-size:clamp(16px,2.4vw,26px);max-width:23ch;}
+  .frag.c{margin:11vh 0 0 14vw;}
+  .frags .f1{top:6vh;left:30vw;}
+  .frags .f2{top:34vh;left:8vw;--r:20deg;}
+  .frags .f3{bottom:6vh;right:18vw;}
+  .frags .f4{top:2vh;right:10vw;}
+  .frags .f5{bottom:18vh;left:46vw;--r:-8deg;}
+  .frags .f6{top:40vh;right:30vw;}
+  .frags .ghost.g5{top:22vh;left:60vw;}
+  .frags .ghost.g6{bottom:30vh;left:24vw;}
+
+  
+  .essays .tri.small{top:10vh;left:4vw;}
+  .essays .ring.small{bottom:14vh;right:6vw;}
+  .essays .dot.green{top:22vh;right:12vw;}
+  .essays .bar.violet{bottom:30vh;left:6vw;--r:18deg;}
+  .essay{max-width:50ch;margin:0 0 12vh;}
+  .essay.offset{margin-left:auto;margin-right:2vw;text-align:right;}
+  .essay h2{font-weight:400;font-size:clamp(24px,4.2vw,50px);line-height:1.22;margin:0 0 18px;}
+  .essay p{font-size:17px;margin:0 0 10px;color:var(--ink);line-height:1.85;}
+  .when{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--ink-soft);}
+
+  
+  .works .dot.violet{top:10vh;left:4vw;}
+  .works .quarter{bottom:8vh;right:5vw;--r:180deg;}
+  .works .line.short{top:40vh;right:30vw;--r:-30deg;}
+  .panels{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:26px;}
+  .panel{position:relative;background:rgba(255,255,255,.5);border:1px solid var(--hair);
+         padding:30px 24px 24px;min-height:222px;display:flex;flex-direction:column;
+         transition:transform .5s cubic-bezier(.2,.7,.2,1),box-shadow .5s,border-color .5s;}
+  .panel:hover{box-shadow:0 18px 40px -24px rgba(29,30,27,.4);border-color:var(--ochre);}
+  .panel .p{top:18px;right:18px;}
+  .panel h3{font-weight:400;font-size:20px;margin:8px 0 12px;}
+  .panel p{font-size:15px;color:var(--ink-soft);margin:0;flex:1;line-height:1.7;}
+  .state{font-family:var(--mono);align-self:flex-start;margin-top:16px;font-size:11px;letter-spacing:.16em;color:var(--ink-soft);}
+  .panel.up{transform:translateY(-22px);}
+  .panel.down{transform:translateY(20px);}
+  .panel.up:hover{transform:translateY(-28px);}
+  .panel.down:hover{transform:translateY(14px);}
+
+  
+  .updates .dot.teal{top:10vh;right:8vw;}
+  .updates .tri.small.violet{bottom:12vh;left:5vw;--r:8deg;}
+  .line-list{list-style:none;margin:0;padding:0;max-width:60ch;}
+  .line-list li{font-size:16px;color:var(--ink);padding:13px 0;border-bottom:1px solid var(--hair);display:flex;gap:14px;flex-wrap:wrap;}
+  .line-list li:last-child{border-bottom:0;}
+  .line-list .when{font-family:var(--mono);min-width:84px;color:var(--blue);}
+  .line-list .faint{opacity:.5;font-style:italic;}
+
+  
+  .closing .circle.small{top:-4vh;right:12vw;}
+  .closing .dot.red{bottom:6vh;left:8vw;}
+  .closing .ring.tiny{top:8vh;left:30vw;}
+  .closing p{margin:0 0 8px;color:var(--ink-soft);font-size:16px;}
+  .closing .sig{font-size:clamp(18px,2.4vw,26px);color:var(--ink);max-width:24ch;line-height:1.5;margin-bottom:5vh;}
+  .tiny{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--ink-soft);}
+
+  
+  .gather .mk{opacity:0;transition:transform 1.4s cubic-bezier(.16,.84,.28,1),opacity 1.2s ease;}
+  .gather.is-in .mk{opacity:var(--o,1);}
+
+  
+  @media (max-width:760px){
+    section,header,footer{padding:12vh 7vw;}
+    .hero .circle.big{top:8%;}
+    .hero .halo{left:2%;}
+    .lede{margin-left:8vw;}
+    .frag.b{margin-left:8vw;}
+    .frag.c{margin-left:3vw;}
+    .panels{grid-template-columns:1fr;}
+    .panel.up,.panel.down{transform:none;}
+    .panel.up:hover,.panel.down:hover{transform:translateY(-4px);}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;scroll-behavior:auto;}
+    .gather .mk,.ghost{transition:none!important;opacity:var(--o,1)!important;}
+    .ghost{opacity:.5!important;}
+  }
+  </style>
+</head>
+<body>
+
+  
+  <header class="hero">
+    <div class="composition" id="heroComp" aria-hidden="true">
+      <span class="mk target halo paint" data-depth="0.35" style="--r:0deg"></span>
+      <span class="mk circle big paint" data-depth="0.5" style="--r:0deg"></span>
+      <span class="mk target paint" data-depth="0.7" style="--r:0deg"></span>
+      <span class="mk ring drift-a" data-depth="0.9" style="--r:0deg"></span>
+      <span class="mk ring small" data-depth="1.1" style="--r:0deg"></span>
+      <span class="mk ring violet tiny" data-depth="1.3" style="--r:0deg"></span>
+      <span class="mk quarter teal paint" data-depth="0.6" style="--r:0deg"></span>
+      <span class="mk half blue paint" data-depth="0.65" style="--r:16deg"></span>
+      <span class="mk checker" data-depth="0.8" style="--r:-10deg"></span>
+      <span class="mk arc" data-depth="1.0" style="--r:0deg"></span>
+      <span class="mk arc blue" data-depth="0.85" style="--r:0deg"></span>
+      <span class="mk bar paint" data-depth="0.75" style="--r:-24deg"></span>
+      <span class="mk bar violet paint" data-depth="0.95" style="--r:12deg"></span>
+      <span class="mk tri paint" data-depth="0.7" style="--r:12deg"></span>
+      <span class="mk tri small red" data-depth="1.2" style="--r:-20deg"></span>
+      <span class="mk tri green paint" data-depth="0.9" style="--r:0deg"></span>
+      <span class="mk line" id="diag1" data-depth="0.9" style="--r:24deg;width:clamp(280px,46vw,560px);top:34%;left:3%"></span>
+      <span class="mk line" id="diag2" data-depth="1.1" style="--r:-40deg;width:clamp(200px,30vw,380px);top:15%;right:5%"></span>
+      <span class="mk line" id="diag3" data-depth="1.0" style="--r:-15deg;width:clamp(150px,20vw,250px);top:60%;left:33%;background:var(--blue)"></span>
+      <span class="mk line" id="diag4" data-depth="0.95" style="--r:-7deg;width:clamp(220px,40vw,520px);bottom:33%;left:7%"></span>
+      <span class="mk dot red" data-depth="1.3" style="--r:0deg"></span>
+      <span class="mk dot blue" data-depth="1.2" style="--r:0deg"></span>
+      <span class="mk dot green" data-depth="1.1" style="--r:0deg"></span>
+      <span class="mk dot violet" data-depth="1.35" style="--r:0deg"></span>
+      <span class="mk dot rose" data-depth="1.1" style="--r:0deg"></span>
+      <span class="mk dot ochre" data-depth="1.25" style="--r:0deg"></span>
+      <span class="mk dot ink" data-depth="1.4" style="--r:0deg"></span>
+      <span class="mk dot ink ghost g1" data-depth="1.5" style="--r:0deg;width:9px;height:9px"></span>
+      <span class="mk ring tiny ghost g2" data-depth="1.45" style="--r:0deg"></span>
+      <span class="mk dot violet ghost g3" data-depth="1.5" style="--r:0deg;width:10px;height:10px"></span>
+      <span class="mk dot ochre ghost g4" data-depth="1.4" style="--r:0deg;width:9px;height:9px"></span>
+    </div>
+
+    <p class="overline">入口 — a quiet room</p>
+    <h1 class="title"><span class="ph">書きかけの考えと、</span><span class="ph soft">作りかけのもの。</span></h1>
+    <p class="lede"><span class="ph">静かな画面に、</span><span class="ph">いくつかの点と線が浮いている。</span></p>
+    <p class="enter" aria-hidden="true">↓</p>
+  </header>
+
+  
+  <section class="purpose gather" id="about">
+    <div class="composition" aria-hidden="true">
+      <span class="mk circle small drift-a" style="--o:.26;--r:0deg"></span>
+      <span class="mk tri small" style="--o:.85"></span>
+      <span class="mk dot rose" style="--o:1"></span>
+      <span class="mk ring tiny" style="--o:1;--r:0deg"></span>
+    </div>
+    <p class="mark">about</p>
+    <p><span class="ph">CreativeWorld は、</span><span class="ph">静かな文章と小さな実験を置く、</span><span class="ph">内側の天気のための場所。</span><span class="ph">要素を詰め込まず、</span><span class="ph">余白の中に少しずつ置いていく。</span></p>
+  </section>
+
+  
+  <section class="frags gather" id="fragments">
+    <p class="mark">fragments</p>
+    <div class="float-field">
+      <p class="frag a"><span class="ph">余白は情報量。</span><span class="ph">詰めない勇気。</span></p>
+      <span class="mk dot ochre f1" style="--o:1" aria-hidden="true"></span>
+      <span class="mk ring tiny f4" style="--o:1;--r:0deg" aria-hidden="true"></span>
+      <p class="frag b"><span class="ph nowrap">motion は読みを助ける時だけ。</span><span class="ph">それ以外は、ただ静かに置かれている。</span></p>
+      <span class="mk line short f2" style="--o:1" aria-hidden="true"></span>
+      <span class="mk dot violet f5" style="--o:1" aria-hidden="true"></span>
+      <p class="frag c"><span class="ph">「あとで書く」を</span><span class="ph">置いておける場所。</span></p>
+      <span class="mk ring small f3" style="--o:1;--r:0deg" aria-hidden="true"></span>
+      <span class="mk tri small green f6" style="--o:.85" aria-hidden="true"></span>
+      <span class="mk dot teal ghost g5" style="--r:0deg;width:11px;height:11px" aria-hidden="true"></span>
+      <span class="mk ring tiny ghost g6" style="--r:0deg" aria-hidden="true"></span>
+    </div>
+  </section>
+
+  
+  <section class="essays gather" id="essays">
+    <div class="composition" aria-hidden="true">
+      <span class="mk tri small" style="--o:.85"></span>
+      <span class="mk ring small" style="--o:1;--r:0deg"></span>
+      <span class="mk dot green" style="--o:1"></span>
+      <span class="mk bar violet paint" style="--o:.6"></span>
+    </div>
+    <p class="mark">essays</p>
+    <article class="essay">
+      <h2><span class="ph">静かなサイトを</span><span class="ph">作る理由</span></h2>
+      <p><span class="ph">なぜ派手さより継続性を選ぶか。</span><span class="ph">表面は静かでいい。</span><span class="ph">下で、ゆっくり動いているものがある。</span></p>
+      <p class="when">2026-06-04</p>
+    </article>
+    <article class="essay offset">
+      <h2><span class="ph">道具と作業の</span><span class="ph">住み分けメモ</span></h2>
+      <p><span class="ph">作業と創作で道具を分ける感覚の整理。</span><span class="ph">まだ言葉になりきっていない。</span></p>
+      <p class="when">open note</p>
+    </article>
+  </section>
+
+  
+  <section class="works gather" id="works">
+    <div class="composition" aria-hidden="true">
+      <span class="mk dot violet" style="--o:1"></span>
+      <span class="mk quarter teal paint" style="--o:.5"></span>
+      <span class="mk line short" style="--o:1"></span>
+    </div>
+    <p class="mark">works</p>
+    <ul class="panels">
+      <li class="panel">
+        <span class="mk dot blue p" style="--r:0deg" aria-hidden="true"></span>
+        <h3>RSS log page</h3>
+        <p><span class="ph">公開RSSの送信ログを映す</span><span class="ph">静かな窓。</span></p>
+        <span class="state">experiment</span>
+      </li>
+      <li class="panel up">
+        <span class="mk dot red p" style="--r:0deg" aria-hidden="true"></span>
+        <h3>CreativeWorld</h3>
+        <p><span class="ph">この場所そのもの。</span><span class="ph">まだ固まっていない。</span></p>
+        <span class="state">building</span>
+      </li>
+      <li class="panel down">
+        <span class="mk ring tiny p" style="--r:0deg" aria-hidden="true"></span>
+        <h3><span class="ph">未定の</span><span class="ph">小ツール</span></h3>
+        <p><span class="ph">まだ名前がない。</span></p>
+        <span class="state">parked</span>
+      </li>
+    </ul>
+  </section>
+
+  
+  <section class="updates gather" id="updates">
+    <div class="composition" aria-hidden="true">
+      <span class="mk dot teal" style="--o:1"></span>
+      <span class="mk tri small violet" style="--o:.85"></span>
+    </div>
+    <p class="mark">updates</p>
+    <ul class="line-list">
+      <li><span class="when">2026-06-04</span> <span class="ph">最初の点と線を置いた。</span><span class="ph">まだ形は決まりきっていない。</span></li>
+      <li><span class="when">2026-06-04</span> <span class="ph">静けさと抽象の向きを合わせた。</span></li>
+      <li class="faint"><span class="when">next</span> <span class="ph">言葉を、もう少しだけ奥へ。</span></li>
+    </ul>
+  </section>
+
+  
+  <footer class="closing gather">
+    <div class="composition" aria-hidden="true">
+      <span class="mk circle small drift-b" style="--o:.26;--r:0deg"></span>
+      <span class="mk dot red" style="--o:1"></span>
+      <span class="mk ring tiny" style="--o:1;--r:0deg"></span>
+    </div>
+    <p class="sig"><span class="ph">表面だけが静か。下で、点と線がゆっくり動いている。</span></p>
+    <p class="tiny">CreativeWorld — quiet composition · inner weather</p>
+  </footer>
+
+  <script>
+  (() => {
+    "use strict";
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    
+    const heroComp = document.getElementById("heroComp");
+    const heroMarks = heroComp ? Array.from(heroComp.querySelectorAll(".mk")) : [];
+
+    function measure(){
+      const r = heroComp.getBoundingClientRect();
+      const cx = r.width / 2, cy = r.height / 2;
+      heroMarks.forEach(m => {
+        const b = m.getBoundingClientRect();
+        const mx = (b.left - r.left) + b.width / 2;
+        const my = (b.top - r.top) + b.height / 2;
+        let dx = mx - cx, dy = my - cy;
+        const len = Math.hypot(dx, dy) || 1;
+        m._ux = dx / len;          // 散る単位ベクトル
+        m._uy = dy / len;
+        m._depth = parseFloat(m.dataset.depth || "1");
+        m._rot = parseFloat((m.style.getPropertyValue("--r") || "0").replace("deg","")) || 0;
+      });
+    }
+
+    
+    let scatter = 0;             // 0=集合, 1=散開
+    let mx = 0, my = 0;          // 正規化マウス(-1..1)
+    let tmx = 0, tmy = 0;
+
+    function applyHero(){
+      heroMarks.forEach(m => {
+        const d = m._depth;
+        // スクロールで中心から外へ散る（深い印ほど大きく）
+        const sx = m._ux * scatter * 150 * d;
+        const sy = m._uy * scatter * 150 * d + scatter * 40 * d;
+        // マウス視差（深い印ほど大きく逆方向に動く＝奥行き）
+        const px = -mx * 26 * d;
+        const py = -my * 18 * d;
+        m.style.transform =
+          `translate3d(${(sx+px).toFixed(2)}px,${(sy+py).toFixed(2)}px,0) rotate(${m._rot}deg)`;
+      });
+    }
+
+    
+    function onScroll(){
+      const h = window.innerHeight;
+      const p = Math.min(1, Math.max(0, window.scrollY / (h * 0.9)));
+      scatter = p;
+    }
+
+    
+    const ghosts = Array.from(document.querySelectorAll(".ghost"));
+    function onMove(e){
+      const w = window.innerWidth, h = window.innerHeight;
+      tmx = (e.clientX / w) * 2 - 1;
+      tmy = (e.clientY / h) * 2 - 1;
+      // 近づくと現れる印
+      for (const g of ghosts){
+        const b = g.getBoundingClientRect();
+        const gx = b.left + b.width / 2, gy = b.top + b.height / 2;
+        const dist = Math.hypot(e.clientX - gx, e.clientY - gy);
+        const reveal = Math.max(0, 1 - dist / 240);
+        g.style.opacity = (reveal * 0.9).toFixed(3);
+      }
+    }
+
+    
+    let heroVisible = true, raf = 0;
+    function loop(){
+      mx += (tmx - mx) * 0.06;
+      my += (tmy - my) * 0.06;
+      applyHero();
+      raf = heroVisible ? requestAnimationFrame(loop) : 0;
+    }
+    function startLoop(){ if(!raf && !reduce){ raf = requestAnimationFrame(loop); } }
+
+    if (heroComp && !reduce){
+      measure();
+      window.addEventListener("scroll", onScroll, { passive:true });
+      window.addEventListener("mousemove", onMove, { passive:true });
+      window.addEventListener("resize", () => { measure(); }, { passive:true });
+      new IntersectionObserver((es) => {
+        heroVisible = es[0].isIntersecting;
+        if (heroVisible) startLoop();
+      }, { threshold:0 }).observe(heroComp);
+      onScroll();
+      startLoop();
+    }
+
+    
+    const gatherSecs = document.querySelectorAll(".gather");
+    if (!reduce && gatherSecs.length){
+      // 初期：散った状態（中心から外へオフセット）
+      gatherSecs.forEach(sec => {
+        const r = sec.getBoundingClientRect();
+        sec.querySelectorAll(".composition .mk, .float-field .mk").forEach(m => {
+          const ang = Math.random() * Math.PI * 2;
+          const dist = 60 + Math.random() * 90;
+          m.style.setProperty("--gx", (Math.cos(ang)*dist).toFixed(1)+"px");
+          m.style.setProperty("--gy", (Math.sin(ang)*dist).toFixed(1)+"px");
+          m.style.transform = `translate(${m.style.getPropertyValue("--gx")},${m.style.getPropertyValue("--gy")}) rotate(${(m.style.getPropertyValue("--r")||"0deg")})`;
+        });
+      });
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(en => {
+          if (en.isIntersecting){
+            en.target.classList.add("is-in");
+            en.target.querySelectorAll(".composition .mk, .float-field .mk").forEach(m => {
+              m.style.transform = `translate(0,0) rotate(${(m.style.getPropertyValue("--r")||"0deg")})`;
+            });
+            io.unobserve(en.target);
+          }
+        });
+      }, { threshold:0.18 });
+      gatherSecs.forEach(s => io.observe(s));
+    }
+  })();
+  </script>
+
+</body>
+</html>
