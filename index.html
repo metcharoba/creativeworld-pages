@@ -213,6 +213,11 @@
   .purpose p{margin:0;font-size:clamp(16px,2.2vw,22px);max-width:46ch;line-height:1.95;}
 
   
+  .now .dot.ochre{top:8vh;left:8vw;}
+  .now .ring.small{bottom:11vh;right:8vw;}
+  .now .bar.red{top:30vh;right:24vw;--r:-10deg;}
+
+  
   .float-field{position:relative;min-height:66vh;}
   .frag{position:relative;z-index:1;font-size:clamp(20px,3.6vw,40px);line-height:1.32;margin:0;max-width:17ch;color:var(--ink);}
   .frag.a{margin:0 0 0 2vw;}
@@ -354,6 +359,26 @@
   </section>
 
   
+  <section class="now gather" id="now">
+    <div class="composition" aria-hidden="true">
+      <span class="mk dot ochre" style="--o:1"></span>
+      <span class="mk ring small" style="--o:1;--r:0deg"></span>
+      <span class="mk bar red paint" style="--o:.52"></span>
+    </div>
+    <p class="mark">now / recently</p>
+    <article class="essay">
+      <h2><span class="ph">外に置いた、</span><span class="ph">小さな部屋。</span></h2>
+      <p><span class="ph">CreativeWorld は、</span><span class="ph">いま公開された場所として立っている。</span><span class="ph">大きく知らせるより、</span><span class="ph">まず静かに置いておく。</span></p>
+    </article>
+    <ul class="line-list">
+      <li><span class="when">recent</span> <span class="ph">公開された信号を集め、</span><span class="ph">小さな跡を残す機械。</span></li>
+      <li><span class="when">recent</span> <span class="ph">公開されたキットを掘る習慣。</span><span class="ph">崇拝せず、少しだけ持ち帰る。</span></li>
+      <li><span class="when">recent</span> <span class="ph">AI が道具から相手に近づく瞬間のメモ。</span></li>
+      <li><span class="when">recent</span> <span class="ph">この部屋を、</span><span class="ph">はじめて外に置いたこと。</span></li>
+    </ul>
+  </section>
+
+  
   <section class="frags gather" id="fragments">
     <p class="mark">fragments</p>
     <div class="float-field">
@@ -465,7 +490,7 @@
         const my = (b.top - r.top) + b.height / 2;
         let dx = mx - cx, dy = my - cy;
         const len = Math.hypot(dx, dy) || 1;
-        m._ux = dx / len;          // 散る単位ベクトル
+        m._ux = dx / len;
         m._uy = dy / len;
         m._depth = parseFloat(m.dataset.depth || "1");
         m._rot = parseFloat((m.style.getPropertyValue("--r") || "0").replace("deg","")) || 0;
@@ -473,17 +498,15 @@
     }
 
     
-    let scatter = 0;             // 0=集合, 1=散開
-    let mx = 0, my = 0;          // 正規化マウス(-1..1)
+    let scatter = 0;
+    let mx = 0, my = 0;
     let tmx = 0, tmy = 0;
 
     function applyHero(){
       heroMarks.forEach(m => {
         const d = m._depth;
-        // スクロールで中心から外へ散る（深い印ほど大きく）
         const sx = m._ux * scatter * 150 * d;
         const sy = m._uy * scatter * 150 * d + scatter * 40 * d;
-        // マウス視差（深い印ほど大きく逆方向に動く＝奥行き）
         const px = -mx * 26 * d;
         const py = -my * 18 * d;
         m.style.transform =
@@ -504,7 +527,6 @@
       const w = window.innerWidth, h = window.innerHeight;
       tmx = (e.clientX / w) * 2 - 1;
       tmy = (e.clientY / h) * 2 - 1;
-      // 近づくと現れる印
       for (const g of ghosts){
         const b = g.getBoundingClientRect();
         const gx = b.left + b.width / 2, gy = b.top + b.height / 2;
@@ -540,7 +562,6 @@
     
     const gatherSecs = document.querySelectorAll(".gather");
     if (!reduce && gatherSecs.length){
-      // 初期：散った状態（中心から外へオフセット）
       gatherSecs.forEach(sec => {
         const r = sec.getBoundingClientRect();
         sec.querySelectorAll(".composition .mk, .float-field .mk").forEach(m => {
