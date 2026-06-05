@@ -1,592 +1,489 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CreativeWorld — composition</title>
-  <meta name="description" content="静かな画面に、点と線が浮いている。カンディンスキーのコンポジションのような、不思議さ・芸術性・静けさを持つ小さな場所。">
+  <title>CreativeWorld — composition field</title>
+  <meta name="description" content="A quiet personal world that keeps rearranging itself. A generative geometric field you enter, with small rooms, objects and traces left inside the same composition.">
   <style>
-  
+    :root{
+      --ground:#faf5eb;          /* cream */
+      --ground-soft:#f3eede;
+      --ink:#161616;
+      --ink-soft:#6f6f6a;
+      --hair:#e4ded0;
+      /* restrained Kandinsky accents */
+      --red:#b03326;
+      --blue:#26478c;
+      --ochre:#c8962a;
+      --black:#111110;
+      --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,"Times New Roman",serif;
+      --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,"Roboto Mono",monospace;
+      --measure:42ch;
+      color-scheme:light;
+    }
 
-  :root{
-    --ground:#fafaf7;          
-    --ground-2:#f0efe9;        
-    --ink:#161616;
-    --ink-soft:#6f6f6a;
-    --hair:#e9e7e0;            
-    --black:#111110;           
+    *{box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{
+      margin:0;
+      background:var(--ground);
+      color:var(--ink);
+      font-family:var(--serif);
+      line-height:1.8;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+      overflow-x:hidden;
+    }
 
-    
-    --red:#b03326;
-    --blue:#26478c;
-    --ochre:#c8962a;
-    --green:#536c54;
-    --violet:#5b4985;          
-    --teal:#327079;
-    --rose:#a9787f;
+    /* the world: a generative field fixed behind everything */
+    #field{position:fixed;inset:0;z-index:0;display:block;}
+    /* faint depth + edge vignette so the field reads as a space, not a screen */
+    .veil{
+      position:fixed;inset:0;z-index:1;pointer-events:none;
+      background:
+        radial-gradient(120% 90% at 18% 8%, rgba(38,71,140,0.03), transparent 58%),
+        radial-gradient(120% 90% at 86% 92%, rgba(176,51,38,0.025), transparent 58%),
+        radial-gradient(150% 130% at 50% 46%, transparent 60%, rgba(250,245,235,0.5));
+    }
 
-    --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,"Times New Roman",serif;
-    --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,"Roboto Mono",monospace;
-    --maxw:1120px;
-    color-scheme:light;
-  }
+    .world{position:relative;z-index:2;}
 
-  *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
-  body{
-    margin:0;
-    background:var(--ground);
-    color:var(--ink);
-    font-family:var(--serif);
-    line-height:1.78;
-    overflow-x:hidden;
-    word-break:auto-phrase;
-    line-break:strict;
-    -webkit-font-smoothing:antialiased;
-    text-rendering:optimizeLegibility;
-  }
+    /* mono marks — small lowercase labels, the same language as the field */
+    .mark{
+      font-family:var(--mono);
+      font-size:11px;letter-spacing:.4em;text-transform:lowercase;
+      color:var(--ink-soft);margin:0 0 clamp(28px,4.5vh,52px);
+      display:flex;align-items:center;gap:13px;
+    }
+    .mark::before{content:"";width:24px;height:1px;background:currentColor;opacity:.55;}
+    .mark.red{color:var(--red);}
 
-  
-  body::before{
-    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
-    background:
-      radial-gradient(120% 90% at 16% 6%, rgba(91,73,133,0.03), transparent 56%),
-      radial-gradient(120% 90% at 90% 94%, rgba(38,71,140,0.025), transparent 56%);
-  }
+    /* rooms are clearings in the field, not cards */
+    .room{
+      position:relative;
+      max-width:1040px;margin:0 auto;
+      padding:clamp(108px,17vh,190px) 8vw;
+    }
+    .clearing{
+      position:relative;
+      padding:clamp(34px,6vw,72px) clamp(28px,5vw,60px);
+      background:
+        radial-gradient(130% 150% at 30% 0%, rgba(250,245,235,0.86), rgba(250,245,235,0.58));
+      -webkit-backdrop-filter:blur(2.5px);
+      backdrop-filter:blur(2.5px);
+      border-top:1px solid var(--hair);
+    }
 
-  section,header,footer{
-    position:relative;
-    max-width:var(--maxw);
-    margin:0 auto;
-    padding:17vh 8vw;
-  }
+    /* entrance — the field is the hero; only faint marks float over it */
+    .entrance{
+      min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+      max-width:1180px;margin:0 auto;padding:14vh 8vw 12vh;
+    }
+    .entrance .corner-mark{
+      position:absolute;top:5vh;left:8vw;
+      font-family:var(--mono);font-size:11px;letter-spacing:.34em;text-transform:lowercase;
+      color:rgba(22,22,22,.5);
+    }
+    .enter-lines{margin-top:auto;max-width:24ch;}
+    .enter-lines p{
+      margin:0 0 14px;font-size:clamp(18px,2.7vw,30px);line-height:1.4;
+      color:var(--ink);text-shadow:0 1px 0 var(--ground),0 0 14px var(--ground);
+    }
+    .enter-lines .dim{color:var(--ink-soft);font-size:clamp(15px,2vw,20px);max-width:30ch;}
+    .down{margin:7vh 0 0;font-size:20px;color:var(--ink-soft);width:1em;
+      animation:sink 4s ease-in-out infinite;}
+    @keyframes sink{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(8px);opacity:.85}}
 
-  a{color:var(--blue);text-underline-offset:3px;text-decoration-thickness:1px;}
+    h2{font-weight:400;letter-spacing:.01em;}
+    .room h2{font-size:clamp(24px,4vw,46px);line-height:1.22;margin:0 0 22px;max-width:16ch;}
+    .body{font-size:clamp(16px,2.1vw,21px);color:var(--ink);line-height:1.9;max-width:var(--measure);margin:0;}
+    .body.soft{color:var(--ink-soft);}
 
-  .ph{display:inline-block;}
-  .nowrap{white-space:nowrap;}
+    /* fragments — scattered quiet lines, echoing the canvas words */
+    .fragment-room{padding-bottom:clamp(70px,11vh,140px);}
+    .fragments{list-style:none;margin:0;padding:0;min-height:46vh;position:relative;}
+    .fragments li{
+      font-size:clamp(18px,3vw,33px);line-height:1.32;color:var(--ink);max-width:18ch;
+      text-shadow:0 1px 0 var(--ground),0 0 12px var(--ground);
+    }
+    .fragments li:nth-child(1){margin:0 0 0 2vw;}
+    .fragments li:nth-child(2){margin:11vh 0 0 40vw;color:var(--ink-soft);font-size:clamp(15px,2.2vw,24px);max-width:22ch;}
+    .fragments li:nth-child(3){margin:9vh 0 0 14vw;}
+    .fragments li:nth-child(4){margin:8vh 0 0 44vw;color:var(--ink-soft);max-width:20ch;}
 
-  
-  .composition{position:absolute;inset:0;overflow:visible;z-index:0;pointer-events:none;}
-  section>*:not(.composition),
-  header>*:not(.composition),
-  footer>*:not(.composition){position:relative;z-index:1;}
+    /* objects — left in the field, asymmetric, not a grid of cards */
+    .objects{list-style:none;margin:0;padding:0;}
+    .object{
+      position:relative;max-width:38ch;margin:0 0 clamp(46px,7vh,86px);
+      padding-left:26px;
+    }
+    .object::before{
+      content:"";position:absolute;left:0;top:13px;width:10px;height:10px;border-radius:50%;
+      background:var(--ochre);opacity:.8;
+    }
+    .object:nth-child(2){margin-left:auto;margin-right:6vw;}
+    .object:nth-child(2)::before{background:var(--black);}
+    .object:nth-child(3){margin-left:22vw;}
+    .object:nth-child(3)::before{background:var(--red);}
+    .object:nth-child(4){margin-left:8vw;}
+    .object:nth-child(4)::before{background:var(--blue);}
+    .object:nth-child(5){margin-left:auto;margin-right:18vw;}
+    .object:nth-child(5)::before{background:var(--ink-soft);}
+    .object h3{font-weight:400;font-size:clamp(19px,2.6vw,26px);margin:0 0 8px;}
+    .object p{margin:0;font-size:16px;color:var(--ink-soft);line-height:1.74;max-width:34ch;}
+    .object .state{display:inline-block;margin-top:11px;font-family:var(--mono);
+      font-size:10px;letter-spacing:.18em;text-transform:lowercase;color:var(--ink-soft);opacity:.8;}
 
-  
-  .mark{
-    font-family:var(--mono);
-    font-size:11px;letter-spacing:.42em;text-transform:lowercase;
-    color:var(--ink-soft);margin:0 0 5vh;
-    display:flex;align-items:center;gap:14px;
-  }
-  .mark::before{content:"";width:26px;height:1px;background:currentColor;opacity:.5;}
+    /* traces — a quiet log of small movements over time */
+    .traces{list-style:none;margin:0;padding:0;max-width:58ch;}
+    .traces li{
+      display:flex;gap:16px;flex-wrap:wrap;align-items:baseline;
+      padding:16px 0;border-bottom:1px solid var(--hair);font-size:16px;color:var(--ink);line-height:1.7;
+    }
+    .traces li:last-child{border-bottom:0;}
+    .traces .when{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--blue);min-width:80px;}
+    .traces .faint{opacity:.5;font-style:italic;}
 
-  
-  .mk{position:absolute;pointer-events:none;will-change:transform;}
-  .paint{mix-blend-mode:multiply;}      
-  .circle{border-radius:50%;}
-  .ring{border-radius:50%;background:transparent;}
+    .light-room{display:grid;grid-template-columns:minmax(0,1fr) minmax(210px,360px);
+      gap:clamp(40px,8vw,92px);align-items:center;}
+    .light-copy p{max-width:32ch;}
+    .lamp-scene{position:relative;min-height:clamp(240px,34vw,330px);isolation:isolate;}
+    .lamp-shadow{position:absolute;z-index:0;left:50%;top:57%;width:clamp(240px,32vw,390px);aspect-ratio:2.35/1;
+      transform:translate(-45%,-50%) rotate(-8deg);border-radius:50%;
+      background:radial-gradient(ellipse at 48% 50%,rgba(48,61,78,.2) 0 16%,rgba(44,50,60,.13) 36%,rgba(34,35,38,.08) 58%,transparent 74%);
+      filter:blur(1.5px);}
+    .lamp-haze{position:absolute;z-index:1;left:53%;top:43%;width:clamp(108px,15vw,180px);aspect-ratio:1;border-radius:50%;
+      transform:translate(-50%,-50%);
+      background:radial-gradient(circle,rgba(118,148,178,.22) 0 14%,rgba(92,116,145,.12) 36%,transparent 70%);}
+    .small-lamp{position:absolute;z-index:2;left:53%;top:48%;width:92px;height:132px;transform:translate(-50%,-50%);}
+    .lamp-shade{position:absolute;left:18px;top:18px;width:54px;height:29px;clip-path:polygon(18% 0,82% 0,100% 100%,0 100%);
+      background:linear-gradient(180deg,rgba(123,143,162,.82),rgba(77,91,108,.72));box-shadow:0 0 30px rgba(86,120,160,.18);}
+    .lamp-stem{position:absolute;left:43px;top:46px;width:3px;height:58px;background:rgba(60,68,78,.56);}
+    .lamp-base{position:absolute;left:24px;bottom:20px;width:42px;height:9px;border-radius:50%;background:rgba(58,63,70,.42);}
 
-  .circle.big{width:clamp(150px,22vw,280px);aspect-ratio:1;background:var(--violet);opacity:.17;}
-  .circle.small{width:92px;height:92px;background:var(--blue);opacity:.18;}
-  .ring{width:160px;height:160px;border:2px solid var(--ochre);}
-  .ring.small{width:72px;height:72px;border:2px solid var(--blue);}
-  .ring.tiny{width:26px;height:26px;border:2px solid var(--red);}
-  .ring.violet{border-color:var(--violet);}
+    .trace-box{max-width:600px;}
+    .trace-intro{font-size:clamp(15px,2vw,19px);color:var(--ink-soft);line-height:1.86;margin:0 0 30px;max-width:36ch;}
+    .trace-field{
+      width:100%;min-height:108px;resize:vertical;
+      border:1px solid var(--hair);background:rgba(255,255,255,.4);color:var(--ink);
+      padding:16px;font:17px/1.6 var(--serif);
+    }
+    .trace-field::placeholder{color:#9d9b94;}
+    .trace-field:focus{outline:2px solid rgba(200,150,42,.28);outline-offset:3px;}
+    .trace-note{margin:14px 0 0;color:#7b3129;font-size:13.5px;line-height:1.6;}
+    .trace-foot{display:flex;align-items:center;gap:16px;margin-top:16px;flex-wrap:wrap;}
+    .trace-foot button{
+      min-height:40px;border:1px solid var(--hair);background:transparent;color:var(--ink-soft);
+      padding:8px 16px;font:11px var(--mono);letter-spacing:.16em;text-transform:lowercase;cursor:not-allowed;
+    }
+    .trace-state{margin:0;font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--ink-soft);}
 
-  .dot{width:15px;height:15px;border-radius:50%;}
-  .dot.red{background:var(--red);}.dot.blue{background:var(--blue);}
-  .dot.ochre{background:var(--ochre);}.dot.green{background:var(--green);}
-  .dot.violet{background:var(--violet);}.dot.teal{background:var(--teal);}
-  .dot.rose{background:var(--rose);}.dot.ink{background:var(--black);}
+    /* closing */
+    .closing{max-width:1040px;margin:0 auto;padding:clamp(110px,16vh,200px) 8vw clamp(130px,18vh,220px);}
+    .closing .sig{font-size:clamp(18px,2.6vw,28px);color:var(--ink);max-width:26ch;line-height:1.5;margin:0 0 5vh;
+      text-shadow:0 1px 0 var(--ground),0 0 12px var(--ground);}
+    .tiny{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--ink-soft);margin:0;}
 
-  .line{height:1.5px;background:var(--black);transform-origin:left center;}
-  .line.short{width:120px;}
-  .line.hair{height:1px;opacity:.7;}
+    /* gentle reveal of clearings, motion kept subtle */
+    .reveal{opacity:0;transform:translateY(14px);transition:opacity 1.1s ease,transform 1.1s cubic-bezier(.16,.84,.3,1);}
+    .reveal.in{opacity:1;transform:none;}
 
-  .tri{width:0;height:0;border-left:28px solid transparent;border-right:28px solid transparent;
-       border-bottom:48px solid var(--blue);opacity:.58;}
-  .tri.small{border-left-width:15px;border-right-width:15px;border-bottom-width:26px;border-bottom-color:var(--ochre);opacity:.7;}
-  .tri.green{border-bottom-color:var(--green);}
-  .tri.violet{border-bottom-color:var(--violet);}
-  .tri.red{border-bottom-color:var(--red);}
-
-  .arc{width:200px;height:200px;border:2px solid var(--red);border-radius:50%;
-       clip-path:polygon(0 50%,100% 0,100% 50%,0 100%);opacity:.5;}
-  .arc.blue{border-color:var(--blue);}
-
-  
-  .target{width:130px;height:130px;border-radius:50%;
-    background:radial-gradient(circle,
-      var(--red) 0 13%, var(--ground-2) 13% 25%,
-      var(--blue) 25% 40%, var(--ground-2) 40% 55%,
-      var(--ochre) 55% 70%, var(--ground-2) 70% 83%,
-      var(--black) 83% 100%);
-    opacity:.84;}
-  .target.halo{width:clamp(190px,26vw,340px);
-    background:radial-gradient(circle,
-      var(--black) 0 9%, var(--ground-2) 9% 17%,
-      var(--blue) 17% 30%, var(--ground-2) 30% 44%,
-      var(--violet) 44% 62%, color-mix(in oklab,var(--violet),var(--ground) 70%) 62% 100%);
-    opacity:.92;}
-
-  .quarter{width:90px;height:90px;background:var(--green);border-radius:100% 0 0 0;opacity:.36;}
-  .quarter.violet{background:var(--violet);}.quarter.teal{background:var(--teal);}
-
-  .half{width:110px;height:55px;background:var(--rose);border-radius:110px 110px 0 0;opacity:.36;}
-  .half.blue{background:var(--blue);opacity:.3;}
-
-  .checker{width:84px;height:84px;
-    background-image:
-      linear-gradient(45deg,var(--black) 25%,transparent 25% 75%,var(--black) 75%),
-      linear-gradient(45deg,var(--black) 25%,transparent 25% 75%,var(--black) 75%);
-    background-size:28px 28px;background-position:0 0,14px 14px;opacity:.1;}
-
-  .bar{width:130px;height:13px;background:var(--teal);opacity:.46;}
-  .bar.violet{background:var(--violet);}.bar.ochre{background:var(--ochre);}.bar.red{background:var(--red);}
-
-  
-  .ghost{opacity:0;transition:opacity 1.1s ease;}
-
-  
-  @keyframes floatA{0%,100%{transform:translate(0,0)}50%{transform:translate(9px,-13px)}}
-  @keyframes floatB{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(-11px,9px) rotate(3deg)}}
-  .drift-a{animation:floatA 26s ease-in-out infinite;}
-  .drift-b{animation:floatB 32s ease-in-out infinite;}
-
-  
-  .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;
-        padding-top:14vh;padding-bottom:12vh;}
-  .hero .composition{overflow:visible;}
-
-  
-  .hero .halo      {top:6%;  left:5%;}
-  .hero .circle.big{top:14%; right:7%;}
-  .hero .target    {top:48%; right:27%;left:auto;}
-  .hero .ring      {bottom:14%;left:8%;}
-  .hero .ring.small{top:24%; left:46%;}
-  .hero .ring.violet.tiny{top:40%;right:30%;}
-  .hero .quarter   {bottom:18%;right:24%;}
-  .hero .half      {top:20%; right:30%;}
-  .hero .checker   {bottom:9%; left:34%;}
-  .hero .arc       {bottom:5%; left:40%;}
-  .hero .arc.blue  {top:12%;  left:30%;}
-  .hero .bar       {top:64%; left:18%;}
-  .hero .bar.violet{top:34%; right:14%;}
-  .hero .tri       {top:22%; left:42%;}
-  .hero .tri.small.red{bottom:24%;left:26%;}
-  .hero .tri.green {bottom:30%;right:34%;}
-  .hero .dot.red   {top:30%; left:13%;width:20px;height:20px;}
-  .hero .dot.blue  {bottom:30%;right:18%;}
-  .hero .dot.green {top:46%; right:11%;width:17px;height:17px;}
-  .hero .dot.violet{bottom:42%;left:24%;width:12px;height:12px;}
-  .hero .dot.rose  {top:12%; left:54%;}
-  .hero .dot.ochre {top:70%; right:38%;}
-  .hero .dot.ink   {top:58%; right:8%;width:10px;height:10px;}
-  
-  .hero .ghost.g1{top:18%;left:20%;}
-  .hero .ghost.g2{top:50%;left:62%;}
-  .hero .ghost.g3{bottom:18%;left:54%;}
-  .hero .ghost.g4{top:36%;right:22%;}
-
-  .overline{font-family:var(--mono);font-size:11px;letter-spacing:.4em;text-transform:lowercase;
-            color:var(--red);margin:0 0 4vh;display:flex;align-items:center;gap:12px;}
-  .overline::before{content:"";width:22px;height:1px;background:currentColor;}
-  .title{
-    font-weight:400;
-    font-size:clamp(36px,6.6vw,86px);
-    line-height:1.24;letter-spacing:.012em;
-    margin:0;max-width:17ch;
-    text-shadow:0 1px 0 var(--ground);
-  }
-  .title .soft{color:var(--ink-soft);}
-  .lede{margin:5.5vh 0 0 6vw;font-size:clamp(15px,2vw,20px);color:var(--ink-soft);max-width:30ch;text-shadow:0 1px 0 var(--ground),0 0 12px var(--ground);}
-  .enter{margin:8vh 0 0;font-size:22px;color:var(--ink-soft);
-         animation:sink 3.8s ease-in-out infinite;width:1em;}
-  @keyframes sink{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(9px);opacity:.85}}
-
-  
-  .purpose .circle.small{top:9vh;right:6vw;}
-  .purpose .tri.small{bottom:13vh;left:5vw;--r:-12deg;}
-  .purpose .dot.rose{top:24vh;left:30vw;}
-  .purpose .ring.tiny{top:30vh;right:24vw;}
-  .purpose p{margin:0;font-size:clamp(16px,2.2vw,22px);max-width:46ch;line-height:1.95;}
-
-  
-  .now .dot.ochre{top:8vh;left:8vw;}
-  .now .ring.small{bottom:11vh;right:8vw;}
-  .now .bar.red{top:30vh;right:24vw;--r:-10deg;}
-
-  
-  .float-field{position:relative;min-height:66vh;}
-  .frag{position:relative;z-index:1;font-size:clamp(20px,3.6vw,40px);line-height:1.32;margin:0;max-width:17ch;color:var(--ink);}
-  .frag.a{margin:0 0 0 2vw;}
-  .frag.b{margin:13vh 0 0 38vw;color:var(--ink-soft);font-size:clamp(16px,2.4vw,26px);max-width:23ch;}
-  .frag.c{margin:11vh 0 0 14vw;}
-  .frags .f1{top:6vh;left:30vw;}
-  .frags .f2{top:34vh;left:8vw;--r:20deg;}
-  .frags .f3{bottom:6vh;right:18vw;}
-  .frags .f4{top:2vh;right:10vw;}
-  .frags .f5{bottom:18vh;left:46vw;--r:-8deg;}
-  .frags .f6{top:40vh;right:30vw;}
-  .frags .ghost.g5{top:22vh;left:60vw;}
-  .frags .ghost.g6{bottom:30vh;left:24vw;}
-
-  
-  .essays .tri.small{top:10vh;left:4vw;}
-  .essays .ring.small{bottom:14vh;right:6vw;}
-  .essays .dot.green{top:22vh;right:12vw;}
-  .essays .bar.violet{bottom:30vh;left:6vw;--r:18deg;}
-  .essay{max-width:50ch;margin:0 0 12vh;}
-  .essay.offset{margin-left:auto;margin-right:2vw;text-align:right;}
-  .essay h2{font-weight:400;font-size:clamp(24px,4.2vw,50px);line-height:1.22;margin:0 0 18px;}
-  .essay p{font-size:17px;margin:0 0 10px;color:var(--ink);line-height:1.85;}
-  .when{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--ink-soft);}
-
-  
-  .works .dot.violet{top:10vh;left:4vw;}
-  .works .quarter{bottom:8vh;right:5vw;--r:180deg;}
-  .works .line.short{top:40vh;right:30vw;--r:-30deg;}
-  .panels{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:26px;}
-  .panel{position:relative;background:rgba(255,255,255,.5);border:1px solid var(--hair);
-         padding:30px 24px 24px;min-height:222px;display:flex;flex-direction:column;
-         transition:transform .5s cubic-bezier(.2,.7,.2,1),box-shadow .5s,border-color .5s;}
-  .panel:hover{box-shadow:0 18px 40px -24px rgba(29,30,27,.4);border-color:var(--ochre);}
-  .panel .p{top:18px;right:18px;}
-  .panel h3{font-weight:400;font-size:20px;margin:8px 0 12px;}
-  .panel p{font-size:15px;color:var(--ink-soft);margin:0;flex:1;line-height:1.7;}
-  .state{font-family:var(--mono);align-self:flex-start;margin-top:16px;font-size:11px;letter-spacing:.16em;color:var(--ink-soft);}
-  .panel.up{transform:translateY(-22px);}
-  .panel.down{transform:translateY(20px);}
-  .panel.up:hover{transform:translateY(-28px);}
-  .panel.down:hover{transform:translateY(14px);}
-
-  
-  .updates .dot.teal{top:10vh;right:8vw;}
-  .updates .tri.small.violet{bottom:12vh;left:5vw;--r:8deg;}
-  .line-list{list-style:none;margin:0;padding:0;max-width:60ch;}
-  .line-list li{font-size:16px;color:var(--ink);padding:13px 0;border-bottom:1px solid var(--hair);display:flex;gap:14px;flex-wrap:wrap;}
-  .line-list li:last-child{border-bottom:0;}
-  .line-list .when{font-family:var(--mono);min-width:84px;color:var(--blue);}
-  .line-list .faint{opacity:.5;font-style:italic;}
-
-  
-  .closing .circle.small{top:-4vh;right:12vw;}
-  .closing .dot.red{bottom:6vh;left:8vw;}
-  .closing .ring.tiny{top:8vh;left:30vw;}
-  .closing p{margin:0 0 8px;color:var(--ink-soft);font-size:16px;}
-  .closing .sig{font-size:clamp(18px,2.4vw,26px);color:var(--ink);max-width:24ch;line-height:1.5;margin-bottom:5vh;}
-  .tiny{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--ink-soft);}
-
-  
-  .gather .mk{opacity:0;transition:transform 1.4s cubic-bezier(.16,.84,.28,1),opacity 1.2s ease;}
-  .gather.is-in .mk{opacity:var(--o,1);}
-
-  
-  @media (max-width:760px){
-    section,header,footer{padding:12vh 7vw;}
-    .hero .circle.big{top:8%;}
-    .hero .halo{left:2%;}
-    .lede{margin-left:8vw;}
-    .frag.b{margin-left:8vw;}
-    .frag.c{margin-left:3vw;}
-    .panels{grid-template-columns:1fr;}
-    .panel.up,.panel.down{transform:none;}
-    .panel.up:hover,.panel.down:hover{transform:translateY(-4px);}
-  }
-
-  @media (prefers-reduced-motion:reduce){
-    *{animation:none!important;scroll-behavior:auto;}
-    .gather .mk,.ghost{transition:none!important;opacity:var(--o,1)!important;}
-    .ghost{opacity:.5!important;}
-  }
+    @media (max-width:760px){
+      .light-room{grid-template-columns:1fr;}
+      .fragments li{margin-left:2vw!important;margin-right:0!important;}
+      .object{margin-left:0!important;margin-right:0!important;}
+    }
+    @media (prefers-reduced-motion:reduce){
+      *{animation:none!important;scroll-behavior:auto;}
+      .reveal{opacity:1!important;transform:none!important;transition:none!important;}
+    }
   </style>
 </head>
 <body>
+  <canvas id="field" aria-hidden="true"></canvas>
+  <div class="veil" aria-hidden="true"></div>
 
-  
-  <header class="hero">
-    <div class="composition" id="heroComp" aria-hidden="true">
-      <span class="mk target halo paint" data-depth="0.35" style="--r:0deg"></span>
-      <span class="mk circle big paint" data-depth="0.5" style="--r:0deg"></span>
-      <span class="mk target paint" data-depth="0.7" style="--r:0deg"></span>
-      <span class="mk ring drift-a" data-depth="0.9" style="--r:0deg"></span>
-      <span class="mk ring small" data-depth="1.1" style="--r:0deg"></span>
-      <span class="mk ring violet tiny" data-depth="1.3" style="--r:0deg"></span>
-      <span class="mk quarter teal paint" data-depth="0.6" style="--r:0deg"></span>
-      <span class="mk half blue paint" data-depth="0.65" style="--r:16deg"></span>
-      <span class="mk checker" data-depth="0.8" style="--r:-10deg"></span>
-      <span class="mk arc" data-depth="1.0" style="--r:0deg"></span>
-      <span class="mk arc blue" data-depth="0.85" style="--r:0deg"></span>
-      <span class="mk bar paint" data-depth="0.75" style="--r:-24deg"></span>
-      <span class="mk bar violet paint" data-depth="0.95" style="--r:12deg"></span>
-      <span class="mk tri paint" data-depth="0.7" style="--r:12deg"></span>
-      <span class="mk tri small red" data-depth="1.2" style="--r:-20deg"></span>
-      <span class="mk tri green paint" data-depth="0.9" style="--r:0deg"></span>
-      <span class="mk line" id="diag1" data-depth="0.9" style="--r:24deg;width:clamp(280px,46vw,560px);top:34%;left:3%"></span>
-      <span class="mk line" id="diag2" data-depth="1.1" style="--r:-40deg;width:clamp(200px,30vw,380px);top:15%;right:5%"></span>
-      <span class="mk line" id="diag3" data-depth="1.0" style="--r:-15deg;width:clamp(150px,20vw,250px);top:60%;left:33%;background:var(--blue)"></span>
-      <span class="mk line" id="diag4" data-depth="0.95" style="--r:-7deg;width:clamp(220px,40vw,520px);bottom:33%;left:7%"></span>
-      <span class="mk dot red" data-depth="1.3" style="--r:0deg"></span>
-      <span class="mk dot blue" data-depth="1.2" style="--r:0deg"></span>
-      <span class="mk dot green" data-depth="1.1" style="--r:0deg"></span>
-      <span class="mk dot violet" data-depth="1.35" style="--r:0deg"></span>
-      <span class="mk dot rose" data-depth="1.1" style="--r:0deg"></span>
-      <span class="mk dot ochre" data-depth="1.25" style="--r:0deg"></span>
-      <span class="mk dot ink" data-depth="1.4" style="--r:0deg"></span>
-      <span class="mk dot ink ghost g1" data-depth="1.5" style="--r:0deg;width:9px;height:9px"></span>
-      <span class="mk ring tiny ghost g2" data-depth="1.45" style="--r:0deg"></span>
-      <span class="mk dot violet ghost g3" data-depth="1.5" style="--r:0deg;width:10px;height:10px"></span>
-      <span class="mk dot ochre ghost g4" data-depth="1.4" style="--r:0deg;width:9px;height:9px"></span>
-    </div>
+  <main class="world">
 
-    <p class="overline">入口 — a quiet room</p>
-    <h1 class="title"><span class="ph">書きかけの考えと、</span><span class="ph soft">作りかけのもの。</span></h1>
-    <p class="lede"><span class="ph">静かな画面に、</span><span class="ph">いくつかの点と線が浮いている。</span></p>
-    <p class="enter" aria-hidden="true">↓</p>
-  </header>
+    <!-- entrance: you walk into the field itself -->
+    <header class="entrance">
+      <p class="corner-mark">creativeworld · a composition that keeps rearranging</p>
+      <div class="enter-lines">
+        <p>You have walked into a field that does not hold still.</p>
+        <p class="dim">Points, lines and planes arrive, drift toward some unseen weight, and leave.</p>
+      </div>
+      <p class="down" aria-hidden="true">↓</p>
+    </header>
 
-  
-  <section class="purpose gather" id="about">
-    <div class="composition" aria-hidden="true">
-      <span class="mk circle small drift-a" style="--o:.26;--r:0deg"></span>
-      <span class="mk tri small" style="--o:.85"></span>
-      <span class="mk dot rose" style="--o:1"></span>
-      <span class="mk ring tiny" style="--o:1;--r:0deg"></span>
-    </div>
-    <p class="mark">about</p>
-    <p><span class="ph">CreativeWorld は、</span><span class="ph">静かな文章と小さな実験を置く、</span><span class="ph">内側の天気のための場所。</span><span class="ph">要素を詰め込まず、</span><span class="ph">余白の中に少しずつ置いていく。</span></p>
-  </section>
+    <section class="room reveal" id="place">
+      <div class="clearing">
+        <p class="mark">the place</p>
+        <h2>A room for inner weather.</h2>
+        <p class="body">CreativeWorld is a small room for inner weather — quiet writing and
+          small experiments, set down slowly into empty space. Nothing is crowded in.
+          Things are placed, and then left, where the field can move around them.</p>
+      </div>
+    </section>
 
-  
-  <section class="now gather" id="now">
-    <div class="composition" aria-hidden="true">
-      <span class="mk dot ochre" style="--o:1"></span>
-      <span class="mk ring small" style="--o:1;--r:0deg"></span>
-      <span class="mk bar red paint" style="--o:.52"></span>
-    </div>
-    <p class="mark">now / recently</p>
-    <article class="essay">
-      <h2><span class="ph">外に置いた、</span><span class="ph">小さな部屋。</span></h2>
-      <p><span class="ph">CreativeWorld は、</span><span class="ph">いま公開された場所として立っている。</span><span class="ph">大きく知らせるより、</span><span class="ph">まず静かに置いておく。</span></p>
-    </article>
-    <ul class="line-list">
-      <li><span class="when">recent</span> <span class="ph">公開された信号を集め、</span><span class="ph">小さな跡を残す機械。</span></li>
-      <li><span class="when">recent</span> <span class="ph">公開されたキットを掘る習慣。</span><span class="ph">崇拝せず、少しだけ持ち帰る。</span></li>
-      <li><span class="when">recent</span> <span class="ph">AI が道具から相手に近づく瞬間のメモ。</span></li>
-      <li><span class="when">recent</span> <span class="ph">この部屋を、</span><span class="ph">はじめて外に置いたこと。</span></li>
-    </ul>
-  </section>
+    <section class="room fragment-room reveal" id="fragments">
+      <p class="mark">fragments</p>
+      <ul class="fragments">
+        <li>Empty space is information. The courage not to fill it.</li>
+        <li>Motion only when it helps the reading. Otherwise, things are simply left still.</li>
+        <li>A place to keep “I’ll write it later.”</li>
+        <li>The surface stays quiet. Underneath, something keeps moving.</li>
+      </ul>
+    </section>
 
-  
-  <section class="frags gather" id="fragments">
-    <p class="mark">fragments</p>
-    <div class="float-field">
-      <p class="frag a"><span class="ph">余白は情報量。</span><span class="ph">詰めない勇気。</span></p>
-      <span class="mk dot ochre f1" style="--o:1" aria-hidden="true"></span>
-      <span class="mk ring tiny f4" style="--o:1;--r:0deg" aria-hidden="true"></span>
-      <p class="frag b"><span class="ph nowrap">motion は読みを助ける時だけ。</span><span class="ph">それ以外は、ただ静かに置かれている。</span></p>
-      <span class="mk line short f2" style="--o:1" aria-hidden="true"></span>
-      <span class="mk dot violet f5" style="--o:1" aria-hidden="true"></span>
-      <p class="frag c"><span class="ph">「あとで書く」を</span><span class="ph">置いておける場所。</span></p>
-      <span class="mk ring small f3" style="--o:1;--r:0deg" aria-hidden="true"></span>
-      <span class="mk tri small green f6" style="--o:.85" aria-hidden="true"></span>
-      <span class="mk dot teal ghost g5" style="--r:0deg;width:11px;height:11px" aria-hidden="true"></span>
-      <span class="mk ring tiny ghost g6" style="--r:0deg" aria-hidden="true"></span>
-    </div>
-  </section>
+    <section class="room reveal" id="objects">
+      <div class="clearing">
+        <p class="mark">objects in the field</p>
+        <ul class="objects">
+          <li class="object">
+            <h3>The quiet machine</h3>
+            <p>Something keeps sorting public fragments into a small window, even when
+              nobody is watching.</p>
+            <span class="state">running</span>
+          </li>
+          <li class="object">
+            <h3>The black door</h3>
+            <p>It does not ask to be opened. It only changes the room by existing.</p>
+            <span class="state">closed</span>
+          </li>
+          <li class="object">
+            <h3>The unfinished note</h3>
+            <p>A sentence stops halfway, but still points somewhere.</p>
+            <span class="state">open</span>
+          </li>
+          <li class="object">
+            <h3>CreativeWorld itself</h3>
+            <p>This place. Still not settled into a final shape.</p>
+            <span class="state">building</span>
+          </li>
+          <li class="object">
+            <h3>An unnamed tool</h3>
+            <p>Parked at the edge of the field. No name yet.</p>
+            <span class="state">parked</span>
+          </li>
+        </ul>
+      </div>
+    </section>
 
-  
-  <section class="essays gather" id="essays">
-    <div class="composition" aria-hidden="true">
-      <span class="mk tri small" style="--o:.85"></span>
-      <span class="mk ring small" style="--o:1;--r:0deg"></span>
-      <span class="mk dot green" style="--o:1"></span>
-      <span class="mk bar violet paint" style="--o:.6"></span>
-    </div>
-    <p class="mark">essays</p>
-    <article class="essay">
-      <h2><span class="ph">静かなサイトを</span><span class="ph">作る理由</span></h2>
-      <p><span class="ph">なぜ派手さより継続性を選ぶか。</span><span class="ph">表面は静かでいい。</span><span class="ph">下で、ゆっくり動いているものがある。</span></p>
-      <p class="when">2026-06-04</p>
-    </article>
-    <article class="essay offset">
-      <h2><span class="ph">道具と作業の</span><span class="ph">住み分けメモ</span></h2>
-      <p><span class="ph">作業と創作で道具を分ける感覚の整理。</span><span class="ph">まだ言葉になりきっていない。</span></p>
-      <p class="when">open note</p>
-    </article>
-  </section>
+    <section class="room reveal" id="traces">
+      <div class="clearing">
+        <p class="mark">traces</p>
+        <h2>Small movements, left in passing.</h2>
+        <ul class="traces">
+          <li><span class="when">2026-06-04</span><span>Placed the first points and lines. The shape is not decided.</span></li>
+          <li><span class="when">2026-06-04</span><span>Tuned the direction toward quiet and abstraction.</span></li>
+          <li><span class="when">note</span><span>Why choose continuity over loudness. The surface can stay quiet; underneath, something moves slowly.</span></li>
+          <li><span class="when">open</span><span>Keeping work-tools and making-tools apart — a feeling not yet in words.</span></li>
+          <li class="faint"><span class="when">next</span><span>The words, a little further in.</span></li>
+        </ul>
+      </div>
+    </section>
 
-  
-  <section class="works gather" id="works">
-    <div class="composition" aria-hidden="true">
-      <span class="mk dot violet" style="--o:1"></span>
-      <span class="mk quarter teal paint" style="--o:.5"></span>
-      <span class="mk line short" style="--o:1"></span>
-    </div>
-    <p class="mark">works</p>
-    <ul class="panels">
-      <li class="panel">
-        <span class="mk dot blue p" style="--r:0deg" aria-hidden="true"></span>
-        <h3>RSS log page</h3>
-        <p><span class="ph">公開RSSの送信ログを映す</span><span class="ph">静かな窓。</span></p>
-        <span class="state">experiment</span>
-      </li>
-      <li class="panel up">
-        <span class="mk dot red p" style="--r:0deg" aria-hidden="true"></span>
-        <h3>CreativeWorld</h3>
-        <p><span class="ph">この場所そのもの。</span><span class="ph">まだ固まっていない。</span></p>
-        <span class="state">building</span>
-      </li>
-      <li class="panel down">
-        <span class="mk ring tiny p" style="--r:0deg" aria-hidden="true"></span>
-        <h3><span class="ph">未定の</span><span class="ph">小ツール</span></h3>
-        <p><span class="ph">まだ名前がない。</span></p>
-        <span class="state">parked</span>
-      </li>
-    </ul>
-  </section>
+    <section class="room reveal" id="light">
+      <div class="clearing">
+        <p class="mark">a light left on</p>
+        <div class="light-room">
+          <div class="light-copy">
+            <h2>The light that stayed on.</h2>
+            <p class="body soft">In a room that should be empty, one light is still on.
+              Not a guide — a sign that someone’s hand was here, and might return.</p>
+          </div>
+          <div class="lamp-scene" aria-hidden="true">
+            <span class="lamp-shadow"></span>
+            <span class="lamp-haze"></span>
+            <span class="small-lamp">
+              <span class="lamp-shade"></span>
+              <span class="lamp-stem"></span>
+              <span class="lamp-base"></span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  
-  <section class="updates gather" id="updates">
-    <div class="composition" aria-hidden="true">
-      <span class="mk dot teal" style="--o:1"></span>
-      <span class="mk tri small violet" style="--o:.85"></span>
-    </div>
-    <p class="mark">updates</p>
-    <ul class="line-list">
-      <li><span class="when">2026-06-04</span> <span class="ph">最初の点と線を置いた。</span><span class="ph">まだ形は決まりきっていない。</span></li>
-      <li><span class="when">2026-06-04</span> <span class="ph">静けさと抽象の向きを合わせた。</span></li>
-      <li class="faint"><span class="when">next</span> <span class="ph">言葉を、もう少しだけ奥へ。</span></li>
-    </ul>
-  </section>
+    <section class="room reveal" id="trace">
+      <div class="clearing">
+        <p class="mark red">leave a trace</p>
+        <div class="trace-box">
+          <h2>Leave one sentence beside the field.</h2>
+          <p class="trace-intro">No signature, no explanation — only one sentence left in
+            passing. For now this trace is dormant: it keeps nothing and sends nothing.</p>
+          <textarea class="trace-field" rows="4" maxlength="240"
+            placeholder="A quiet sentence could go here…" aria-label="A dormant, conceptual trace. Nothing is sent or stored."></textarea>
+          <p class="trace-note">Conceptual only. Nothing is sent, stored, or connected to any
+            service. Please don’t include personal, medical, workplace, or identifying information.</p>
+          <div class="trace-foot">
+            <button type="button" disabled aria-disabled="true">leave (dormant)</button>
+            <p class="trace-state">not collecting</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  
-  <footer class="closing gather">
-    <div class="composition" aria-hidden="true">
-      <span class="mk circle small drift-b" style="--o:.26;--r:0deg"></span>
-      <span class="mk dot red" style="--o:1"></span>
-      <span class="mk ring tiny" style="--o:1;--r:0deg"></span>
-    </div>
-    <p class="sig"><span class="ph">表面だけが静か。下で、点と線がゆっくり動いている。</span></p>
-    <p class="tiny">CreativeWorld — quiet composition · inner weather</p>
-  </footer>
+    <!-- closing -->
+    <footer class="closing reveal">
+      <p class="sig">Only the surface is quiet. Underneath, points and lines keep moving.</p>
+      <p class="tiny">CreativeWorld — quiet composition · inner weather</p>
+    </footer>
+
+  </main>
 
   <script>
   (() => {
     "use strict";
+
+    const canvas = document.getElementById("field");
+    const ctx = canvas.getContext("2d");
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    
-    const heroComp = document.getElementById("heroComp");
-    const heroMarks = heroComp ? Array.from(heroComp.querySelectorAll(".mk")) : [];
+    const SERIF =
+      '"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,"Times New Roman",serif';
 
-    function measure(){
-      const r = heroComp.getBoundingClientRect();
-      const cx = r.width / 2, cy = r.height / 2;
-      heroMarks.forEach(m => {
-        const b = m.getBoundingClientRect();
-        const mx = (b.left - r.left) + b.width / 2;
-        const my = (b.top - r.top) + b.height / 2;
-        let dx = mx - cx, dy = my - cy;
-        const len = Math.hypot(dx, dy) || 1;
-        m._ux = dx / len;
-        m._uy = dy / len;
-        m._depth = parseFloat(m.dataset.depth || "1");
-        m._rot = parseFloat((m.style.getPropertyValue("--r") || "0").replace("deg","")) || 0;
-      });
+    // restrained muted Kandinsky accents (red / blue / ochre / black), low alpha
+    const ACCENTS = [
+      "rgba(176,51,38,0.32)",
+      "rgba(38,71,140,0.32)",
+      "rgba(200,150,42,0.32)",
+      "rgba(17,17,16,0.5)"
+    ];
+    const FAINT = "rgba(17,17,16,0.09)"; // near-invisible majority
+
+    // quiet field-words (same vocabulary the rooms echo)
+    const WORDS = ["void","field","drift","silence","trace","sign","ground","weather","hush","form","room"];
+
+    let W = 0, H = 0, dpr = 1;
+    let shapes = [], frags = [];
+    const gravity = { x: 0, y: 0 };
+
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const pick = (a) => a[(Math.random() * a.length) | 0];
+
+    function makeShape(){
+      const types = ["ring","dot","line","triangle","plane"];
+      const colored = Math.random() < 0.3;
+      return {
+        type: pick(types),
+        x: rand(0, W), y: rand(0, H),
+        vx: rand(-0.28, 0.28), vy: rand(-0.28, 0.28),
+        size: rand(10, 68),
+        rotation: rand(0, Math.PI * 2), rotationSpeed: rand(-0.005, 0.005),
+        color: colored ? pick(ACCENTS) : FAINT,
+        opacity: rand(0.1, 0.46),
+        life: 0, maxLife: rand(320, 820)
+      };
     }
-
-    
-    let scatter = 0;
-    let mx = 0, my = 0;
-    let tmx = 0, tmy = 0;
-
-    function applyHero(){
-      heroMarks.forEach(m => {
-        const d = m._depth;
-        const sx = m._ux * scatter * 150 * d;
-        const sy = m._uy * scatter * 150 * d + scatter * 40 * d;
-        const px = -mx * 26 * d;
-        const py = -my * 18 * d;
-        m.style.transform =
-          `translate3d(${(sx+px).toFixed(2)}px,${(sy+py).toFixed(2)}px,0) rotate(${m._rot}deg)`;
-      });
+    function makeFrag(){
+      return {
+        text: pick(WORDS),
+        x: rand(0, W), y: rand(0, H),
+        vx: rand(-0.18, 0.18), vy: rand(-0.18, 0.18),
+        size: rand(20, 40), opacity: rand(0.14, 0.36),
+        rotation: rand(-0.16, 0.16)
+      };
     }
-
-    
-    function onScroll(){
-      const h = window.innerHeight;
-      const p = Math.min(1, Math.max(0, window.scrollY / (h * 0.9)));
-      scatter = p;
+    function seed(){
+      shapes = []; frags = [];
+      for (let i = 0; i < 34; i++) shapes.push(makeShape());
+      for (let i = 0; i < 7; i++) frags.push(makeFrag());
+      gravity.x = W * rand(0.3, 0.7);
+      gravity.y = H * rand(0.3, 0.7);
     }
-
-    
-    const ghosts = Array.from(document.querySelectorAll(".ghost"));
-    function onMove(e){
-      const w = window.innerWidth, h = window.innerHeight;
-      tmx = (e.clientX / w) * 2 - 1;
-      tmy = (e.clientY / h) * 2 - 1;
-      for (const g of ghosts){
-        const b = g.getBoundingClientRect();
-        const gx = b.left + b.width / 2, gy = b.top + b.height / 2;
-        const dist = Math.hypot(e.clientX - gx, e.clientY - gy);
-        const reveal = Math.max(0, 1 - dist / 240);
-        g.style.opacity = (reveal * 0.9).toFixed(3);
+    function resize(){
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      canvas.style.width = W + "px"; canvas.style.height = H + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      gravity.x = Math.max(W * 0.2, Math.min(W * 0.8, gravity.x || W / 2));
+      gravity.y = Math.max(H * 0.2, Math.min(H * 0.8, gravity.y || H / 2));
+    }
+    function drawShape(s){
+      ctx.save();
+      ctx.translate(s.x, s.y); ctx.rotate(s.rotation);
+      ctx.globalAlpha = s.opacity; ctx.strokeStyle = s.color; ctx.fillStyle = s.color;
+      switch (s.type){
+        case "ring": ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0,0,s.size/2,0,Math.PI*2); ctx.stroke(); break;
+        case "dot": ctx.beginPath(); ctx.arc(0,0,s.size/4,0,Math.PI*2); ctx.fill(); break;
+        case "line": ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-s.size/2,0); ctx.lineTo(s.size/2,0); ctx.stroke(); break;
+        case "triangle": ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0,-s.size/2); ctx.lineTo(s.size/2,s.size/2); ctx.lineTo(-s.size/2,s.size/2); ctx.closePath(); ctx.stroke(); break;
+        case "plane": ctx.fillRect(-s.size/2,-s.size/3,s.size,s.size/1.5); break;
+      }
+      ctx.restore();
+    }
+    function drawFrag(f){
+      ctx.save();
+      ctx.translate(f.x, f.y); ctx.rotate(f.rotation);
+      ctx.globalAlpha = f.opacity; ctx.fillStyle = "rgba(22,22,22,0.82)";
+      ctx.font = f.size.toFixed(0) + "px " + SERIF;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(f.text, 0, 0);
+      ctx.restore();
+    }
+    function wrap(o, pad){
+      if (o.x < -pad) o.x = W + pad; if (o.x > W + pad) o.x = -pad;
+      if (o.y < -pad) o.y = H + pad; if (o.y > H + pad) o.y = -pad;
+    }
+    function step(){
+      gravity.x += rand(-0.5, 0.5); gravity.y += rand(-0.5, 0.5);
+      gravity.x = Math.max(W * 0.2, Math.min(W * 0.8, gravity.x));
+      gravity.y = Math.max(H * 0.2, Math.min(H * 0.8, gravity.y));
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < shapes.length; i++){
+        const s = shapes[i];
+        const dx = gravity.x - s.x, dy = gravity.y - s.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const force = Math.min(0.0001, 50 / (dist + 1));
+        s.vx += dx * force; s.vy += dy * force;
+        s.vx *= 0.98; s.vy *= 0.98;
+        s.x += s.vx; s.y += s.vy; s.rotation += s.rotationSpeed;
+        wrap(s, 100);
+        s.life++;
+        if (s.life > s.maxLife) shapes[i] = makeShape();
+        drawShape(shapes[i]);
+      }
+      for (const f of frags){
+        const dx = gravity.x - f.x, dy = gravity.y - f.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const force = Math.min(0.00005, 30 / (dist + 1));
+        f.vx += dx * force; f.vy += dy * force;
+        f.vx *= 0.99; f.vy *= 0.99;
+        f.x += f.vx; f.y += f.vy;
+        wrap(f, 150);
+        drawFrag(f);
       }
     }
-
-    
-    let heroVisible = true, raf = 0;
-    function loop(){
-      mx += (tmx - mx) * 0.06;
-      my += (tmy - my) * 0.06;
-      applyHero();
-      raf = heroVisible ? requestAnimationFrame(loop) : 0;
-    }
-    function startLoop(){ if(!raf && !reduce){ raf = requestAnimationFrame(loop); } }
-
-    if (heroComp && !reduce){
-      measure();
-      window.addEventListener("scroll", onScroll, { passive:true });
-      window.addEventListener("mousemove", onMove, { passive:true });
-      window.addEventListener("resize", () => { measure(); }, { passive:true });
-      new IntersectionObserver((es) => {
-        heroVisible = es[0].isIntersecting;
-        if (heroVisible) startLoop();
-      }, { threshold:0 }).observe(heroComp);
-      onScroll();
-      startLoop();
+    function drawStatic(){
+      ctx.clearRect(0, 0, W, H);
+      for (const s of shapes) drawShape(s);
+      for (const f of frags) drawFrag(f);
     }
 
-    
-    const gatherSecs = document.querySelectorAll(".gather");
-    if (!reduce && gatherSecs.length){
-      gatherSecs.forEach(sec => {
-        const r = sec.getBoundingClientRect();
-        sec.querySelectorAll(".composition .mk, .float-field .mk").forEach(m => {
-          const ang = Math.random() * Math.PI * 2;
-          const dist = 60 + Math.random() * 90;
-          m.style.setProperty("--gx", (Math.cos(ang)*dist).toFixed(1)+"px");
-          m.style.setProperty("--gy", (Math.sin(ang)*dist).toFixed(1)+"px");
-          m.style.transform = `translate(${m.style.getPropertyValue("--gx")},${m.style.getPropertyValue("--gy")}) rotate(${(m.style.getPropertyValue("--r")||"0deg")})`;
-        });
-      });
+    let raf = 0, running = false;
+    function loop(){ step(); raf = requestAnimationFrame(loop); }
+    function start(){ if (!running && !reduce){ running = true; raf = requestAnimationFrame(loop); } }
+    function stop(){ running = false; if (raf) cancelAnimationFrame(raf); raf = 0; }
+
+    window.addEventListener("resize", () => { resize(); if (reduce) drawStatic(); }, { passive:true });
+    document.addEventListener("visibilitychange", () => { if (document.hidden) stop(); else start(); });
+
+    resize(); seed();
+    if (reduce) drawStatic(); else start();
+
+    // gentle reveal of rooms — subtle, never flashy
+    if (!reduce && "IntersectionObserver" in window){
       const io = new IntersectionObserver((entries) => {
-        entries.forEach(en => {
-          if (en.isIntersecting){
-            en.target.classList.add("is-in");
-            en.target.querySelectorAll(".composition .mk, .float-field .mk").forEach(m => {
-              m.style.transform = `translate(0,0) rotate(${(m.style.getPropertyValue("--r")||"0deg")})`;
-            });
-            io.unobserve(en.target);
-          }
-        });
-      }, { threshold:0.18 });
-      gatherSecs.forEach(s => io.observe(s));
+        entries.forEach(en => { if (en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } });
+      }, { threshold:0.16 });
+      document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+    } else {
+      document.querySelectorAll(".reveal").forEach(el => el.classList.add("in"));
     }
   })();
   </script>
-
 </body>
 </html>
