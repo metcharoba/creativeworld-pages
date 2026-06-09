@@ -183,6 +183,9 @@
     .closing{max-width:1040px;margin:0 auto;padding:clamp(110px,16vh,200px) 8vw clamp(130px,18vh,220px);}
     .closing .sig{font-size:clamp(18px,2.6vw,28px);color:var(--ink);max-width:26ch;line-height:1.5;margin:0 0 5vh;
       text-shadow:0 1px 0 var(--ground),0 0 12px var(--ground);}
+    .outside-links{display:flex;flex-wrap:wrap;gap:10px 16px;margin:0 0 18px;max-width:680px;}
+    .outside-links a{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(38,71,140,.28);padding-bottom:3px;}
+    .outside-links a:hover,.outside-links a:focus{color:var(--red);border-bottom-color:rgba(176,51,38,.4);}
     .tiny{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--ink-soft);margin:0;}
 
     /* gentle reveal of clearings, motion kept subtle */
@@ -278,7 +281,7 @@
           <li><span class="when">2026-06-04</span><span>Placed the first points and lines. The shape is not decided.</span></li>
           <li><span class="when">2026-06-04</span><span>Tuned the direction toward quiet and abstraction.</span></li>
           <li><span class="when">note</span><span>Why choose continuity over loudness. The surface can stay quiet; underneath, something moves slowly.</span></li>
-          <li><span class="when">open</span><span>Keeping work-tools and making-tools apart — a feeling not yet in words.</span></li>
+          <li id="ai-partner-observation"><span class="when">open</span><span>Keeping work-tools and making-tools apart — a feeling not yet in words.</span></li>
           <li class="faint"><span class="when">next</span><span>The words, a little further in.</span></li>
         </ul>
       </div>
@@ -328,6 +331,13 @@
     <!-- closing -->
     <footer class="closing reveal">
       <p class="sig">Only the surface is quiet. Underneath, points and lines keep moving.</p>
+      <nav class="outside-links" aria-label="public links">
+        <a href="https://note.com/metcharoba" target="_blank" rel="me noopener">note</a>
+        <a href="https://x.com/metcharoba" target="_blank" rel="me noopener">X</a>
+        <a href="https://metcharoba.github.io/creativeworld-pages/" target="_blank" rel="noopener">GitHub Pages</a>
+        <a href="#objects">experiments</a>
+        <a href="#ai-partner-observation">AI Partner Observation</a>
+      </nav>
       <p class="tiny">CreativeWorld — quiet composition · inner weather</p>
     </footer>
 
