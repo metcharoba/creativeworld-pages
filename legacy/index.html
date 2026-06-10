@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CreativeWorld — composition field</title>
+  <meta name="description" content="A quiet personal world that keeps rearranging itself. A generative geometric field you enter, with small rooms, objects and traces left inside the same composition.">
+  <style>
+    :root{
+      --ground:#faf5eb;          /* cream */
+      --ground-soft:#f3eede;
+      --ink:#161616;
+      --ink-soft:#6f6f6a;
+      --hair:#e4ded0;
+      /* restrained Kandinsky accents */
+      --red:#b03326;
+      --blue:#26478c;
+      --ochre:#c8962a;
+      --black:#111110;
+      --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,"Times New Roman",serif;
+      --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,"Roboto Mono",monospace;
+      --measure:42ch;
+      color-scheme:light;
+    }
+
+    *{box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{
+      margin:0;
+      background:var(--ground);
+      color:var(--ink);
+      font-family:var(--serif);
+      line-height:1.8;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+      overflow-x:hidden;
+    }
+
+    /* the world: a generative field fixed behind everything */
+    #field{position:fixed;inset:0;z-index:0;display:block;}
+    /* faint depth + edge vignette so the field reads as a space, not a screen */
+    .veil{
+      position:fixed;inset:0;z-index:1;pointer-events:none;
+      background:
+        radial-gradient(120% 90% at 18% 8%, rgba(38,71,140,0.03), transparent 58%),
+        radial-gradient(120% 90% at 86% 92%, rgba(176,51,38,0.025), transparent 58%),
+        radial-gradient(150% 130% at 50% 46%, transparent 60%, rgba(250,245,235,0.5));
+    }
+
+    .world{position:relative;z-index:2;}
+
+    /* mono marks — small lowercase labels, the same language as the field */
+    .mark{
+      font-family:var(--mono);
+      font-size:11px;letter-spacing:.4em;text-transform:lowercase;
+      color:var(--ink-soft);margin:0 0 clamp(28px,4.5vh,52px);
+      display:flex;align-items:center;gap:13px;
+    }
+    .mark::before{content:"";width:24px;height:1px;background:currentColor;opacity:.55;}
+    .mark.red{color:var(--red);}
+
+    /* rooms are clearings in the field, not cards */
+    .room{
+      position:relative;
+      max-width:1040px;margin:0 auto;
+      padding:clamp(108px,17vh,190px) 8vw;
+    }
+    .clearing{
+      position:relative;
+      padding:clamp(34px,6vw,72px) clamp(28px,5vw,60px);
+      background:
+        radial-gradient(130% 150% at 30% 0%, rgba(250,245,235,0.86), rgba(250,245,235,0.58));
+      -webkit-backdrop-filter:blur(2.5px);
+      backdrop-filter:blur(2.5px);
+      border-top:1px solid var(--hair);
+    }
+
+    /* entrance — the field is the hero; only faint marks float over it */
+    .entrance{
+      min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+      max-width:1180px;margin:0 auto;padding:14vh 8vw 12vh;
+    }
+    .entrance .corner-mark{
+      position:absolute;top:5vh;left:8vw;
+      font-family:var(--mono);font-size:11px;letter-spacing:.34em;text-transform:lowercase;
+      color:rgba(22,22,22,.5);
+    }
+    .enter-lines{margin-top:auto;max-width:24ch;}
+    .enter-lines p{
+      margin:0 0 14px;font-size:clamp(18px,2.7vw,30px);line-height:1.4;
+      color:var(--ink);text-shadow:0 1px 0 var(--ground),0 0 14px var(--ground);
+    }
+    .enter-lines .dim{color:var(--ink-soft);font-size:clamp(15px,2vw,20px);max-width:30ch;}
+    .down{margin:7vh 0 0;font-size:20px;color:var(--ink-soft);width:1em;
+      animation:sink 4s ease-in-out infinite;}
+    @keyframes sink{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(8px);opacity:.85}}
+
+    h2{font-weight:400;letter-spacing:.01em;}
+    .room h2{font-size:clamp(24px,4vw,46px);line-height:1.22;margin:0 0 22px;max-width:16ch;}
+    .body{font-size:clamp(16px,2.1vw,21px);color:var(--ink);line-height:1.9;max-width:var(--measure);margin:0;}
+    .body.soft{color:var(--ink-soft);}
+
+    /* fragments — scattered quiet lines, echoing the canvas words */
+    .fragment-room{padding-bottom:clamp(70px,11vh,140px);}
+    .fragments{list-style:none;margin:0;padding:0;min-height:46vh;position:relative;}
+    .fragments li{
+      font-size:clamp(18px,3vw,33px);line-height:1.32;color:var(--ink);max-width:18ch;
+      text-shadow:0 1px 0 var(--ground),0 0 12px var(--ground);
+    }
+    .fragments li:nth-child(1){margin:0 0 0 2vw;}
+    .fragments li:nth-child(2){margin:11vh 0 0 40vw;color:var(--ink-soft);font-size:clamp(15px,2.2vw,24px);max-width:22ch;}
+    .fragments li:nth-child(3){margin:9vh 0 0 14vw;}
+    .fragments li:nth-child(4){margin:8vh 0 0 44vw;color:var(--ink-soft);max-width:20ch;}
+
+    /* objects — left in the field, asymmetric, not a grid of cards */
+    .objects{list-style:none;margin:0;padding:0;}
+    .object{
+      position:relative;max-width:38ch;margin:0 0 clamp(46px,7vh,86px);
+      padding-left:26px;
+    }
+    .object::before{
+      content:"";position:absolute;left:0;top:13px;width:10px;height:10px;border-radius:50%;
+      background:var(--ochre);opacity:.8;
+    }
+    .object:nth-child(2){margin-left:auto;margin-right:6vw;}
+    .object:nth-child(2)::before{background:var(--black);}
+    .object:nth-child(3){margin-left:22vw;}
+    .object:nth-child(3)::before{background:var(--red);}
+    .object:nth-child(4){margin-left:8vw;}
+    .object:nth-child(4)::before{background:var(--blue);}
+    .object:nth-child(5){margin-left:auto;margin-right:18vw;}
+    .object:nth-child(5)::before{background:var(--ink-soft);}
+    .object h3{font-weight:400;font-size:clamp(19px,2.6vw,26px);margin:0 0 8px;}
+    .object p{margin:0;font-size:16px;color:var(--ink-soft);line-height:1.74;max-width:34ch;}
+    .object .state{display:inline-block;margin-top:11px;font-family:var(--mono);
+      font-size:10px;letter-spacing:.18em;text-transform:lowercase;color:var(--ink-soft);opacity:.8;}
+
+    /* traces — a quiet log of small movements over time */
+    .traces{list-style:none;margin:0;padding:0;max-width:58ch;}
+    .traces li{
+      display:flex;gap:16px;flex-wrap:wrap;align-items:baseline;
+      padding:16px 0;border-bottom:1px solid var(--hair);font-size:16px;color:var(--ink);line-height:1.7;
+    }
+    .traces li:last-child{border-bottom:0;}
+    .traces .when{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--blue);min-width:80px;}
+    .traces .faint{opacity:.5;font-style:italic;}
+
+    .light-room{display:grid;grid-template-columns:minmax(0,1fr) minmax(210px,360px);
+      gap:clamp(40px,8vw,92px);align-items:center;}
+    .light-copy p{max-width:32ch;}
+    .lamp-scene{position:relative;min-height:clamp(240px,34vw,330px);isolation:isolate;}
+    .lamp-shadow{position:absolute;z-index:0;left:50%;top:57%;width:clamp(240px,32vw,390px);aspect-ratio:2.35/1;
+      transform:translate(-45%,-50%) rotate(-8deg);border-radius:50%;
+      background:radial-gradient(ellipse at 48% 50%,rgba(48,61,78,.2) 0 16%,rgba(44,50,60,.13) 36%,rgba(34,35,38,.08) 58%,transparent 74%);
+      filter:blur(1.5px);}
+    .lamp-haze{position:absolute;z-index:1;left:53%;top:43%;width:clamp(108px,15vw,180px);aspect-ratio:1;border-radius:50%;
+      transform:translate(-50%,-50%);
+      background:radial-gradient(circle,rgba(118,148,178,.22) 0 14%,rgba(92,116,145,.12) 36%,transparent 70%);}
+    .small-lamp{position:absolute;z-index:2;left:53%;top:48%;width:92px;height:132px;transform:translate(-50%,-50%);}
+    .lamp-shade{position:absolute;left:18px;top:18px;width:54px;height:29px;clip-path:polygon(18% 0,82% 0,100% 100%,0 100%);
+      background:linear-gradient(180deg,rgba(123,143,162,.82),rgba(77,91,108,.72));box-shadow:0 0 30px rgba(86,120,160,.18);}
+    .lamp-stem{position:absolute;left:43px;top:46px;width:3px;height:58px;background:rgba(60,68,78,.56);}
+    .lamp-base{position:absolute;left:24px;bottom:20px;width:42px;height:9px;border-radius:50%;background:rgba(58,63,70,.42);}
+
+    .trace-box{max-width:600px;}
+    .trace-intro{font-size:clamp(15px,2vw,19px);color:var(--ink-soft);line-height:1.86;margin:0 0 30px;max-width:36ch;}
+    .trace-field{
+      width:100%;min-height:108px;resize:vertical;
+      border:1px solid var(--hair);background:rgba(255,255,255,.4);color:var(--ink);
+      padding:16px;font:17px/1.6 var(--serif);
+    }
+    .trace-field::placeholder{color:#9d9b94;}
+    .trace-field:focus{outline:2px solid rgba(200,150,42,.28);outline-offset:3px;}
+    .trace-note{margin:14px 0 0;color:#7b3129;font-size:13.5px;line-height:1.6;}
+    .trace-foot{display:flex;align-items:center;gap:16px;margin-top:16px;flex-wrap:wrap;}
+    .trace-foot button{
+      min-height:40px;border:1px solid var(--hair);background:transparent;color:var(--ink-soft);
+      padding:8px 16px;font:11px var(--mono);letter-spacing:.16em;text-transform:lowercase;cursor:not-allowed;
+    }
+    .trace-state{margin:0;font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--ink-soft);}
+
+    /* closing */
+    .closing{max-width:1040px;margin:0 auto;padding:clamp(110px,16vh,200px) 8vw clamp(130px,18vh,220px);}
+    .closing .sig{font-size:clamp(18px,2.6vw,28px);color:var(--ink);max-width:26ch;line-height:1.5;margin:0 0 5vh;
+      text-shadow:0 1px 0 var(--ground),0 0 12px var(--ground);}
+    .outside-links{display:flex;flex-wrap:wrap;gap:10px 16px;margin:0 0 18px;max-width:680px;}
+    .outside-links a{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(38,71,140,.28);padding-bottom:3px;}
+    .outside-links a:hover,.outside-links a:focus{color:var(--red);border-bottom-color:rgba(176,51,38,.4);}
+    .tiny{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--ink-soft);margin:0;}
+
+    /* gentle reveal of clearings, motion kept subtle */
+    .reveal{opacity:0;transform:translateY(14px);transition:opacity 1.1s ease,transform 1.1s cubic-bezier(.16,.84,.3,1);}
+    .reveal.in{opacity:1;transform:none;}
+
+    @media (max-width:760px){
+      .light-room{grid-template-columns:1fr;}
+      .fragments li{margin-left:2vw!important;margin-right:0!important;}
+      .object{margin-left:0!important;margin-right:0!important;}
+    }
+    @media (prefers-reduced-motion:reduce){
+      *{animation:none!important;scroll-behavior:auto;}
+      .reveal{opacity:1!important;transform:none!important;transition:none!important;}
+    }
+  </style>
+</head>
+<body>
+  <canvas id="field" aria-hidden="true"></canvas>
+  <div class="veil" aria-hidden="true"></div>
+
+  <main class="world">
+
+    <!-- entrance: you walk into the field itself -->
+    <header class="entrance">
+      <p class="corner-mark">creativeworld · a composition that keeps rearranging</p>
+      <div class="enter-lines">
+        <p>You have walked into a field that does not hold still.</p>
+        <p class="dim">Points, lines and planes arrive, drift toward some unseen weight, and leave.</p>
+      </div>
+      <p class="down" aria-hidden="true">↓</p>
+    </header>
+
+    <section class="room reveal" id="place">
+      <div class="clearing">
+        <p class="mark">the place</p>
+        <h2>A room for inner weather.</h2>
+        <p class="body">CreativeWorld is a small room for inner weather — quiet writing and
+          small experiments, set down slowly into empty space. Nothing is crowded in.
+          Things are placed, and then left, where the field can move around them.</p>
+      </div>
+    </section>
+
+    <section class="room fragment-room reveal" id="fragments">
+      <p class="mark">fragments</p>
+      <ul class="fragments">
+        <li>Empty space is information. The courage not to fill it.</li>
+        <li>Motion only when it helps the reading. Otherwise, things are simply left still.</li>
+        <li>A place to keep “I’ll write it later.”</li>
+        <li>The surface stays quiet. Underneath, something keeps moving.</li>
+      </ul>
+    </section>
+
+    <section class="room reveal" id="objects">
+      <div class="clearing">
+        <p class="mark">objects in the field</p>
+        <ul class="objects">
+          <li class="object">
+            <h3>The quiet machine</h3>
+            <p>Something keeps sorting public fragments into a small window, even when
+              nobody is watching.</p>
+            <span class="state">running</span>
+          </li>
+          <li class="object">
+            <h3>The black door</h3>
+            <p>It does not ask to be opened. It only changes the room by existing.</p>
+            <span class="state">closed</span>
+          </li>
+          <li class="object">
+            <h3>The unfinished note</h3>
+            <p>A sentence stops halfway, but still points somewhere.</p>
+            <span class="state">open</span>
+          </li>
+          <li class="object">
+            <h3>CreativeWorld itself</h3>
+            <p>This place. Still not settled into a final shape.</p>
+            <span class="state">building</span>
+          </li>
+          <li class="object">
+            <h3>An unnamed tool</h3>
+            <p>Parked at the edge of the field. No name yet.</p>
+            <span class="state">parked</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="room reveal" id="traces">
+      <div class="clearing">
+        <p class="mark">traces</p>
+        <h2>Small movements, left in passing.</h2>
+        <ul class="traces">
+          <li><span class="when">2026-06-04</span><span>Placed the first points and lines. The shape is not decided.</span></li>
+          <li><span class="when">2026-06-04</span><span>Tuned the direction toward quiet and abstraction.</span></li>
+          <li><span class="when">note</span><span>Why choose continuity over loudness. The surface can stay quiet; underneath, something moves slowly.</span></li>
+          <li id="ai-partner-observation"><span class="when">open</span><span>Keeping work-tools and making-tools apart — a feeling not yet in words.</span></li>
+          <li class="faint"><span class="when">next</span><span>The words, a little further in.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="room reveal" id="light">
+      <div class="clearing">
+        <p class="mark">a light left on</p>
+        <div class="light-room">
+          <div class="light-copy">
+            <h2>The light that stayed on.</h2>
+            <p class="body soft">In a room that should be empty, one light is still on.
+              Not a guide — a sign that someone’s hand was here, and might return.</p>
+          </div>
+          <div class="lamp-scene" aria-hidden="true">
+            <span class="lamp-shadow"></span>
+            <span class="lamp-haze"></span>
+            <span class="small-lamp">
+              <span class="lamp-shade"></span>
+              <span class="lamp-stem"></span>
+              <span class="lamp-base"></span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="room reveal" id="trace">
+      <div class="clearing">
+        <p class="mark red">leave a trace</p>
+        <div class="trace-box">
+          <h2>Leave one sentence beside the field.</h2>
+          <p class="trace-intro">No signature, no explanation — only one sentence left in
+            passing. For now this trace is dormant: it keeps nothing and sends nothing.</p>
+          <textarea class="trace-field" rows="4" maxlength="240"
+            placeholder="A quiet sentence could go here…" aria-label="A dormant, conceptual trace. Nothing is sent or stored."></textarea>
+          <p class="trace-note">Conceptual only. Nothing is sent, stored, or connected to any
+            service. Please don’t include personal, medical, workplace, or identifying information.</p>
+          <div class="trace-foot">
+            <button type="button" disabled aria-disabled="true">leave (dormant)</button>
+            <p class="trace-state">not collecting</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- closing -->
+    <footer class="closing reveal">
+      <p class="sig">Only the surface is quiet. Underneath, points and lines keep moving.</p>
+      <nav class="outside-links" aria-label="public links">
+        <a href="https://note.com/margin_trace" target="_blank" rel="me noopener">note</a>
+        <a href="https://github.com/metcharoba/creativeworld-pages" target="_blank" rel="noopener">GitHub</a>
+        <a href="#objects">experiments</a>
+        <a href="#ai-partner-observation">AI Partner Observation</a>
+      </nav>
+      <p class="tiny">CreativeWorld — quiet composition · inner weather</p>
+    </footer>
+
+  </main>
+
+  <script>
+  (() => {
+    "use strict";
+
+    const canvas = document.getElementById("field");
+    const ctx = canvas.getContext("2d");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const SERIF =
+      '"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",Georgia,"Times New Roman",serif';
+
+    // restrained muted Kandinsky accents (red / blue / ochre / black), low alpha
+    const ACCENTS = [
+      "rgba(176,51,38,0.32)",
+      "rgba(38,71,140,0.32)",
+      "rgba(200,150,42,0.32)",
+      "rgba(17,17,16,0.5)"
+    ];
+    const FAINT = "rgba(17,17,16,0.09)"; // near-invisible majority
+
+    // quiet field-words (same vocabulary the rooms echo)
+    const WORDS = ["void","field","drift","silence","trace","sign","ground","weather","hush","form","room"];
+
+    let W = 0, H = 0, dpr = 1;
+    let shapes = [], frags = [];
+    const gravity = { x: 0, y: 0 };
+
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const pick = (a) => a[(Math.random() * a.length) | 0];
+
+    function makeShape(){
+      const types = ["ring","dot","line","triangle","plane"];
+      const colored = Math.random() < 0.3;
+      return {
+        type: pick(types),
+        x: rand(0, W), y: rand(0, H),
+        vx: rand(-0.28, 0.28), vy: rand(-0.28, 0.28),
+        size: rand(10, 68),
+        rotation: rand(0, Math.PI * 2), rotationSpeed: rand(-0.005, 0.005),
+        color: colored ? pick(ACCENTS) : FAINT,
+        opacity: rand(0.1, 0.46),
+        life: 0, maxLife: rand(320, 820)
+      };
+    }
+    function makeFrag(){
+      return {
+        text: pick(WORDS),
+        x: rand(0, W), y: rand(0, H),
+        vx: rand(-0.18, 0.18), vy: rand(-0.18, 0.18),
+        size: rand(20, 40), opacity: rand(0.14, 0.36),
+        rotation: rand(-0.16, 0.16)
+      };
+    }
+    function seed(){
+      shapes = []; frags = [];
+      for (let i = 0; i < 34; i++) shapes.push(makeShape());
+      for (let i = 0; i < 7; i++) frags.push(makeFrag());
+      gravity.x = W * rand(0.3, 0.7);
+      gravity.y = H * rand(0.3, 0.7);
+    }
+    function resize(){
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      canvas.style.width = W + "px"; canvas.style.height = H + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      gravity.x = Math.max(W * 0.2, Math.min(W * 0.8, gravity.x || W / 2));
+      gravity.y = Math.max(H * 0.2, Math.min(H * 0.8, gravity.y || H / 2));
+    }
+    function drawShape(s){
+      ctx.save();
+      ctx.translate(s.x, s.y); ctx.rotate(s.rotation);
+      ctx.globalAlpha = s.opacity; ctx.strokeStyle = s.color; ctx.fillStyle = s.color;
+      switch (s.type){
+        case "ring": ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0,0,s.size/2,0,Math.PI*2); ctx.stroke(); break;
+        case "dot": ctx.beginPath(); ctx.arc(0,0,s.size/4,0,Math.PI*2); ctx.fill(); break;
+        case "line": ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-s.size/2,0); ctx.lineTo(s.size/2,0); ctx.stroke(); break;
+        case "triangle": ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0,-s.size/2); ctx.lineTo(s.size/2,s.size/2); ctx.lineTo(-s.size/2,s.size/2); ctx.closePath(); ctx.stroke(); break;
+        case "plane": ctx.fillRect(-s.size/2,-s.size/3,s.size,s.size/1.5); break;
+      }
+      ctx.restore();
+    }
+    function drawFrag(f){
+      ctx.save();
+      ctx.translate(f.x, f.y); ctx.rotate(f.rotation);
+      ctx.globalAlpha = f.opacity; ctx.fillStyle = "rgba(22,22,22,0.82)";
+      ctx.font = f.size.toFixed(0) + "px " + SERIF;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(f.text, 0, 0);
+      ctx.restore();
+    }
+    function wrap(o, pad){
+      if (o.x < -pad) o.x = W + pad; if (o.x > W + pad) o.x = -pad;
+      if (o.y < -pad) o.y = H + pad; if (o.y > H + pad) o.y = -pad;
+    }
+    function step(){
+      gravity.x += rand(-0.5, 0.5); gravity.y += rand(-0.5, 0.5);
+      gravity.x = Math.max(W * 0.2, Math.min(W * 0.8, gravity.x));
+      gravity.y = Math.max(H * 0.2, Math.min(H * 0.8, gravity.y));
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < shapes.length; i++){
+        const s = shapes[i];
+        const dx = gravity.x - s.x, dy = gravity.y - s.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const force = Math.min(0.0001, 50 / (dist + 1));
+        s.vx += dx * force; s.vy += dy * force;
+        s.vx *= 0.98; s.vy *= 0.98;
+        s.x += s.vx; s.y += s.vy; s.rotation += s.rotationSpeed;
+        wrap(s, 100);
+        s.life++;
+        if (s.life > s.maxLife) shapes[i] = makeShape();
+        drawShape(shapes[i]);
+      }
+      for (const f of frags){
+        const dx = gravity.x - f.x, dy = gravity.y - f.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const force = Math.min(0.00005, 30 / (dist + 1));
+        f.vx += dx * force; f.vy += dy * force;
+        f.vx *= 0.99; f.vy *= 0.99;
+        f.x += f.vx; f.y += f.vy;
+        wrap(f, 150);
+        drawFrag(f);
+      }
+    }
+    function drawStatic(){
+      ctx.clearRect(0, 0, W, H);
+      for (const s of shapes) drawShape(s);
+      for (const f of frags) drawFrag(f);
+    }
+
+    let raf = 0, running = false;
+    function loop(){ step(); raf = requestAnimationFrame(loop); }
+    function start(){ if (!running && !reduce){ running = true; raf = requestAnimationFrame(loop); } }
+    function stop(){ running = false; if (raf) cancelAnimationFrame(raf); raf = 0; }
+
+    window.addEventListener("resize", () => { resize(); if (reduce) drawStatic(); }, { passive:true });
+    document.addEventListener("visibilitychange", () => { if (document.hidden) stop(); else start(); });
+
+    resize(); seed();
+    if (reduce) drawStatic(); else start();
+
+    // gentle reveal of rooms — subtle, never flashy
+    if (!reduce && "IntersectionObserver" in window){
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(en => { if (en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } });
+      }, { threshold:0.16 });
+      document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+    } else {
+      document.querySelectorAll(".reveal").forEach(el => el.classList.add("in"));
+    }
+  })();
+  </script>
+</body>
+</html>
