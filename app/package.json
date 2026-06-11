@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "export": "rm -rf ../assets && cp -R dist/assets ../assets && cp dist/index.html ../index.html"
+    "export": "rm -rf ../assets ../videos && cp -R dist/assets ../assets && cp -R dist/videos ../videos && cp dist/index.html ../index.html"
   },
   "dependencies": {
     "framer-motion": "^12.40.0",

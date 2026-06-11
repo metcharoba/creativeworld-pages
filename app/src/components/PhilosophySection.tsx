@@ -3,15 +3,16 @@ import { motion, useInView } from 'framer-motion';
 
 const serif = { fontFamily: "'Instrument Serif', serif" };
 
-const PHILOSOPHY_VIDEO =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260307_083826_e938b29f-a43a-41ec-a153-3d4730578ab8.mp4';
+// Pixabay "Fairy Forest, Fireflies, Magic" (Pixabay Content License, no attribution
+// required), cropped to 4:3 and compressed for web
+const PHILOSOPHY_VIDEO = `${import.meta.env.BASE_URL}videos/philosophy_fairy.mp4`;
 
 const PhilosophySection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
-    <section ref={ref} className="bg-black py-28 md:py-40 px-6 overflow-hidden">
+    <section id="vision" ref={ref} className="bg-black py-28 md:py-40 px-6 overflow-hidden">
       <div className="max-w-6xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 40 }}

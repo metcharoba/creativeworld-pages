@@ -1,8 +1,7 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 
-const FEATURED_VIDEO =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260402_054547_9875cfc5-155a-4229-8ec8-b7ba7125cbf8.mp4';
+const FEATURED_VIDEO = `${import.meta.env.BASE_URL}videos/featured_robot.mp4`;
 
 const FeaturedVideoSection = () => {
   const ref = useRef(null);

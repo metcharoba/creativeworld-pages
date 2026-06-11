@@ -1,12 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { ArrowRight, Globe, Instagram, Twitter } from 'lucide-react';
+import { Globe, Instagram, Twitter } from 'lucide-react';
 import AboutSection from '../components/AboutSection';
 import FeaturedVideoSection from '../components/FeaturedVideoSection';
 import PhilosophySection from '../components/PhilosophySection';
 import ServicesSection from '../components/ServicesSection';
 
-const HERO_VIDEO =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_074625_a81f018a-956b-43fb-9aee-4d1508e30e6a.mp4';
+const HERO_VIDEO = `${import.meta.env.BASE_URL}videos/hero_robot.mp4`;
 
 const Index = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -37,32 +36,21 @@ const Index = () => {
       animateOpacity(0, 1, 500);
     };
 
+    // play once, then dim slightly toward the end and hold the last frame
     const handleTimeUpdate = () => {
       if (!video.duration || fadingOut) return;
-      if (video.duration - video.currentTime <= 0.55) {
+      if (video.duration - video.currentTime <= 0.8) {
         fadingOut = true;
-        animateOpacity(parseFloat(video.style.opacity || '1'), 0, 500);
+        animateOpacity(parseFloat(video.style.opacity || '1'), 0.6, 800);
       }
-    };
-
-    const handleEnded = () => {
-      video.style.opacity = '0';
-      window.setTimeout(() => {
-        video.currentTime = 0;
-        void video.play().catch(() => {});
-        fadingOut = false;
-        animateOpacity(0, 1, 500);
-      }, 100);
     };
 
     video.addEventListener('canplay', handleCanPlay);
     video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('ended', handleEnded);
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       video.removeEventListener('canplay', handleCanPlay);
       video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('ended', handleEnded);
     };
   }, []);
 
@@ -72,8 +60,17 @@ const Index = () => {
         <video
           ref={videoRef}
           src={HERO_VIDEO}
-          className="absolute inset-0 w-full h-full object-cover object-bottom"
-          style={{ opacity: 0 }}
+          // smaller than full-bleed: the 720p source is shown below its native
+          // width (sharper), seated bottom-center, all edges melting into the
+          // black background via the radial mask
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1000px] max-w-full aspect-video object-cover"
+          style={{
+            opacity: 0,
+            maskImage:
+              'radial-gradient(110% 110% at 50% 100%, black 55%, transparent 92%)',
+            WebkitMaskImage:
+              'radial-gradient(110% 110% at 50% 100%, black 55%, transparent 92%)',
+          }}
           muted
           autoPlay
           playsInline
@@ -85,25 +82,41 @@ const Index = () => {
             <div className="flex items-center">
               <div className="flex items-center gap-2">
                 <Globe size={24} className="text-white" />
-                <span className="text-white font-semibold text-lg">Asme</span>
+                <span className="text-white font-semibold text-lg">CreativeWorld</span>
               </div>
               <div className="hidden md:flex items-center gap-8 ml-8">
-                {['Features', 'Pricing', 'About'].map((link) => (
+                {[
+                  ['About', '#about'],
+                  ['Vision', '#vision'],
+                  ['Works', '#works'],
+                ].map(([label, href]) => (
                   <a
-                    key={link}
-                    href="#"
+                    key={label}
+                    href={href}
                     className="text-white/80 hover:text-white text-sm font-medium"
                   >
-                    {link}
+                    {label}
                   </a>
                 ))}
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <button className="text-white text-sm font-medium">Sign Up</button>
-              <button className="liquid-glass rounded-full px-6 py-2 text-white text-sm font-medium">
-                Login
-              </button>
+              <a
+                href="https://note.com/margin_trace"
+                target="_blank"
+                rel="noreferrer"
+                className="text-white text-sm font-medium"
+              >
+                note
+              </a>
+              <a
+                href="https://github.com/metcharoba"
+                target="_blank"
+                rel="noreferrer"
+                className="liquid-glass rounded-full px-6 py-2 text-white text-sm font-medium"
+              >
+                GitHub
+              </a>
             </div>
           </div>
         </nav>
@@ -116,27 +129,17 @@ const Index = () => {
             Know it <em className="italic">all</em>.
           </h1>
 
-          <form className="max-w-xl w-full mb-6" onSubmit={(e) => e.preventDefault()}>
-            <div className="liquid-glass rounded-full pl-6 pr-2 py-2 flex items-center gap-3">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 min-w-0 bg-transparent text-white placeholder:text-white/40 text-sm outline-none"
-              />
-              <button type="submit" className="bg-white rounded-full p-3 text-black">
-                <ArrowRight size={20} />
-              </button>
-            </div>
-          </form>
-
           <p className="text-white text-sm leading-relaxed px-4 mb-8 max-w-md">
-            Stay updated with the latest news and insights. Subscribe to our newsletter
-            today and never miss out on exciting updates.
+            A personal field of experiments — generative scenes, quiet motion, and small
+            ideas left running in the dark.
           </p>
 
-          <button className="liquid-glass rounded-full px-8 py-3 text-white text-sm font-medium hover:bg-white/5 transition-colors">
-            Manifesto
-          </button>
+          <a
+            href="#about"
+            className="liquid-glass rounded-full px-8 py-3 text-white text-sm font-medium hover:bg-white/5 transition-colors"
+          >
+            Enter the world
+          </a>
         </div>
 
         <div className="relative z-10 flex justify-center gap-4 pb-12">
