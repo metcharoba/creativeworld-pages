@@ -110,7 +110,7 @@ const Index = () => {
                 note
               </a>
               <a
-                href="https://github.com/metcharoba"
+                href="https://github.com/metcharoba/creativeworld-pages"
                 target="_blank"
                 rel="noreferrer"
                 className="liquid-glass rounded-full px-6 py-2 text-white text-sm font-medium"
